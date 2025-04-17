@@ -1,16 +1,23 @@
 import type React from "react"
-import "@/app/globals.css"
+import { Inter, Cormorant_Garamond } from "next/font/google"
+import "./globals.css"
 
-import { Inter } from "next/font/google"
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+})
 
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-
-const inter = Inter({ subsets: ["latin"] })
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+})
 
 export const metadata = {
-  title: "Hours Tracker Pro",
-  description: "Track your working hours and earnings",
+  title: "Tempus - Baroque Hours Tracker",
+  description: "An elegant time tracking application with baroque-inspired design",
 }
 
 export default function RootLayout({
@@ -20,12 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
-        </ThemeProvider>
-      </body>
+      <body className={`${inter.variable} ${cormorant.variable}`}>{children}</body>
     </html>
   )
 }
