@@ -195,7 +195,7 @@ export default function AnalyticsPage() {
     }
   }
 
-  // Render charts using canvas
+  // Render charts using canvas with chiaroscuro effect
   const renderCharts = () => {
     if (!hoursChartRef.current || !earningsChartRef.current) return
 
@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
     // Set canvas dimensions
     const canvasWidth = hoursCanvas.width
     const canvasHeight = hoursCanvas.height
-    const padding = 40
+    const padding = 60
     const chartWidth = canvasWidth - padding * 2
     const chartHeight = canvasHeight - padding * 2
 
@@ -219,104 +219,206 @@ export default function AnalyticsPage() {
     const maxHours = Math.max(...chartData.map((d) => d.hours), 8) // At least 8 hours for scale
     const maxEarnings = Math.max(...chartData.map((d) => d.earnings), 100) // At least £100 for scale
 
-    // Draw hours chart
-    hoursCtx.fillStyle = "#f8f5f0"
+    // Draw hours chart with chiaroscuro effect
+    hoursCtx.fillStyle = "#121218" // Dark background
     hoursCtx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-    // Draw axes
-    hoursCtx.strokeStyle = "#d0c8b0"
-    hoursCtx.lineWidth = 1
-    hoursCtx.beginPath()
-    hoursCtx.moveTo(padding, padding)
-    hoursCtx.lineTo(padding, canvasHeight - padding)
-    hoursCtx.lineTo(canvasWidth - padding, canvasHeight - padding)
-    hoursCtx.stroke()
+    // Add dramatic lighting effect (chiaroscuro)
+    const gradient = hoursCtx.createRadialGradient(
+      canvasWidth * 0.3,
+      canvasHeight * 0.3,
+      0,
+      canvasWidth * 0.3,
+      canvasHeight * 0.3,
+      canvasWidth * 0.7,
+    )
+    gradient.addColorStop(0, "rgba(255, 255, 255, 0.15)")
+    gradient.addColorStop(0.5, "rgba(255, 255, 255, 0.05)")
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)")
+    hoursCtx.fillStyle = gradient
+    hoursCtx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-    // Draw bars
-    const barWidth = chartWidth / chartData.length - 10
+    // Add pentagram pattern (very subtle)
+    const patternImg = new Image()
+    patternImg.crossOrigin = "anonymous"
+    patternImg.src =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20,0 L24,16 L40,16 L28,26 L32,40 L20,32 L8,40 L12,26 L0,16 L16,16 Z' fill='%23d4af37' fillOpacity='0.03'/%3E%3C/svg%3E"
 
-    chartData.forEach((item, index) => {
-      const x = padding + index * (chartWidth / chartData.length) + (chartWidth / chartData.length - barWidth) / 2
-      const barHeight = (item.hours / maxHours) * chartHeight
-      const y = canvasHeight - padding - barHeight
+    patternImg.onload = () => {
+      const pattern = hoursCtx.createPattern(patternImg, "repeat")
+      hoursCtx.fillStyle = pattern
+      hoursCtx.globalAlpha = 0.1
+      hoursCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+      hoursCtx.globalAlpha = 1.0
 
-      // Create gradient
-      const gradient = hoursCtx.createLinearGradient(x, y, x, canvasHeight - padding)
-      gradient.addColorStop(0, "#8b0000")
-      gradient.addColorStop(1, "#d4af37")
+      // Draw axes
+      hoursCtx.strokeStyle = "#3a3428"
+      hoursCtx.lineWidth = 1
+      hoursCtx.beginPath()
+      hoursCtx.moveTo(padding, padding)
+      hoursCtx.lineTo(padding, canvasHeight - padding)
+      hoursCtx.lineTo(canvasWidth - padding, canvasHeight - padding)
+      hoursCtx.stroke()
 
-      hoursCtx.fillStyle = gradient
-      hoursCtx.fillRect(x, y, barWidth, barHeight)
+      // Draw bars with dramatic lighting
+      const barWidth = chartWidth / chartData.length - 10
 
-      // Add labels
-      hoursCtx.fillStyle = "#1a1814"
-      hoursCtx.font = "12px var(--font-sans)"
+      chartData.forEach((item, index) => {
+        const x = padding + index * (chartWidth / chartData.length) + (chartWidth / chartData.length - barWidth) / 2
+        const barHeight = (item.hours / maxHours) * chartHeight
+        const y = canvasHeight - padding - barHeight
+
+        // Create gradient for chiaroscuro effect
+        const barGradient = hoursCtx.createLinearGradient(x, y, x + barWidth, y + barHeight)
+        barGradient.addColorStop(0, "#8b0000") // Dark red
+        barGradient.addColorStop(0.5, "#a52a2a") // Medium red
+        barGradient.addColorStop(1, "#d4af37") // Gold
+
+        hoursCtx.fillStyle = barGradient
+        hoursCtx.fillRect(x, y, barWidth, barHeight)
+
+        // Add highlight to create depth
+        hoursCtx.fillStyle = "rgba(255, 255, 255, 0.2)"
+        hoursCtx.fillRect(x, y, barWidth * 0.3, barHeight)
+
+        // Add labels
+        hoursCtx.fillStyle = "#f8f5f0"
+        hoursCtx.font = "12px var(--font-sans)"
+        hoursCtx.textAlign = "center"
+        hoursCtx.fillText(item.date, x + barWidth / 2, canvasHeight - padding + 20)
+
+        if (item.hours > 0) {
+          hoursCtx.fillText(item.hours.toFixed(1), x + barWidth / 2, y - 10)
+        }
+      })
+
+      // Draw title with dramatic shadow
+      hoursCtx.fillStyle = "#d4af37"
+      hoursCtx.font = "16px var(--font-serif)"
       hoursCtx.textAlign = "center"
-      hoursCtx.fillText(item.date, x + barWidth / 2, canvasHeight - padding + 20)
+      hoursCtx.shadowColor = "rgba(212, 175, 55, 0.5)"
+      hoursCtx.shadowBlur = 10
+      hoursCtx.fillText("Hours Worked", canvasWidth / 2, 40)
+      hoursCtx.shadowBlur = 0
 
-      if (item.hours > 0) {
-        hoursCtx.fillText(item.hours.toFixed(1), x + barWidth / 2, y - 10)
-      }
-    })
+      // Hidden pentagram in chart (very subtle)
+      hoursCtx.fillStyle = "rgba(139, 0, 0, 0.05)"
+      hoursCtx.font = "40px serif"
+      hoursCtx.fillText("⛧", canvasWidth / 2, canvasHeight / 2)
+    }
 
-    // Draw title
-    hoursCtx.fillStyle = "#1a1814"
-    hoursCtx.font = "16px var(--font-serif)"
-    hoursCtx.textAlign = "center"
-    hoursCtx.fillText("Hours Worked", canvasWidth / 2, 20)
-
-    // Draw earnings chart (line chart)
-    earningsCtx.fillStyle = "#f8f5f0"
+    // Draw earnings chart with chiaroscuro effect
+    earningsCtx.fillStyle = "#121218" // Dark background
     earningsCtx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-    // Draw axes
-    earningsCtx.strokeStyle = "#d0c8b0"
-    earningsCtx.lineWidth = 1
-    earningsCtx.beginPath()
-    earningsCtx.moveTo(padding, padding)
-    earningsCtx.lineTo(padding, canvasHeight - padding)
-    earningsCtx.lineTo(canvasWidth - padding, canvasHeight - padding)
-    earningsCtx.stroke()
+    // Add dramatic lighting effect (chiaroscuro)
+    const earningsGradient = earningsCtx.createRadialGradient(
+      canvasWidth * 0.7,
+      canvasHeight * 0.3,
+      0,
+      canvasWidth * 0.7,
+      canvasHeight * 0.3,
+      canvasWidth * 0.7,
+    )
+    earningsGradient.addColorStop(0, "rgba(255, 255, 255, 0.15)")
+    earningsGradient.addColorStop(0.5, "rgba(255, 255, 255, 0.05)")
+    earningsGradient.addColorStop(1, "rgba(0, 0, 0, 0)")
+    earningsCtx.fillStyle = earningsGradient
+    earningsCtx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-    // Draw line
-    earningsCtx.strokeStyle = "#d4af37"
-    earningsCtx.lineWidth = 2
-    earningsCtx.beginPath()
+    // Add pentagram pattern (very subtle)
+    const earningsPatternImg = new Image()
+    earningsPatternImg.crossOrigin = "anonymous"
+    earningsPatternImg.src =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20,0 L24,16 L40,16 L28,26 L32,40 L20,32 L8,40 L12,26 L0,16 L16,16 Z' fill='%23d4af37' fillOpacity='0.03'/%3E%3C/svg%3E"
 
-    chartData.forEach((item, index) => {
-      const x = padding + index * (chartWidth / chartData.length) + chartWidth / chartData.length / 2
-      const y = canvasHeight - padding - (item.earnings / maxEarnings) * chartHeight
+    earningsPatternImg.onload = () => {
+      const pattern = earningsCtx.createPattern(earningsPatternImg, "repeat")
+      earningsCtx.fillStyle = pattern
+      earningsCtx.globalAlpha = 0.1
+      earningsCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+      earningsCtx.globalAlpha = 1.0
 
-      if (index === 0) {
-        earningsCtx.moveTo(x, y)
-      } else {
-        earningsCtx.lineTo(x, y)
-      }
-
-      // Add data points
-      earningsCtx.fillStyle = "#8b0000"
+      // Draw axes
+      earningsCtx.strokeStyle = "#3a3428"
+      earningsCtx.lineWidth = 1
       earningsCtx.beginPath()
-      earningsCtx.arc(x, y, 4, 0, Math.PI * 2)
-      earningsCtx.fill()
+      earningsCtx.moveTo(padding, padding)
+      earningsCtx.lineTo(padding, canvasHeight - padding)
+      earningsCtx.lineTo(canvasWidth - padding, canvasHeight - padding)
+      earningsCtx.stroke()
 
-      // Add labels
-      earningsCtx.fillStyle = "#1a1814"
-      earningsCtx.font = "12px var(--font-sans)"
+      // Draw line with dramatic lighting
+      earningsCtx.strokeStyle = "#d4af37"
+      earningsCtx.lineWidth = 3
+      earningsCtx.beginPath()
+
+      // Add shadow for dramatic effect
+      earningsCtx.shadowColor = "rgba(212, 175, 55, 0.5)"
+      earningsCtx.shadowBlur = 10
+
+      chartData.forEach((item, index) => {
+        const x = padding + index * (chartWidth / chartData.length) + chartWidth / chartData.length / 2
+        const y = canvasHeight - padding - (item.earnings / maxEarnings) * chartHeight
+
+        if (index === 0) {
+          earningsCtx.moveTo(x, y)
+        } else {
+          earningsCtx.lineTo(x, y)
+        }
+      })
+
+      earningsCtx.stroke()
+      earningsCtx.shadowBlur = 0
+
+      // Add data points with glow effect
+      chartData.forEach((item, index) => {
+        const x = padding + index * (chartWidth / chartData.length) + chartWidth / chartData.length / 2
+        const y = canvasHeight - padding - (item.earnings / maxEarnings) * chartHeight
+
+        // Glow effect
+        earningsCtx.shadowColor = "rgba(212, 175, 55, 0.7)"
+        earningsCtx.shadowBlur = 15
+        earningsCtx.fillStyle = "#8b0000"
+        earningsCtx.beginPath()
+        earningsCtx.arc(x, y, 5, 0, Math.PI * 2)
+        earningsCtx.fill()
+        earningsCtx.shadowBlur = 0
+
+        // Add labels
+        earningsCtx.fillStyle = "#f8f5f0"
+        earningsCtx.font = "12px var(--font-sans)"
+        earningsCtx.textAlign = "center"
+        earningsCtx.fillText(item.date, x, canvasHeight - padding + 20)
+
+        if (item.earnings > 0) {
+          earningsCtx.fillText(`£${item.earnings.toFixed(2)}`, x, y - 15)
+        }
+      })
+
+      // Draw title with dramatic shadow
+      earningsCtx.fillStyle = "#d4af37"
+      earningsCtx.font = "16px var(--font-serif)"
       earningsCtx.textAlign = "center"
-      earningsCtx.fillText(item.date, x, canvasHeight - padding + 20)
+      earningsCtx.shadowColor = "rgba(212, 175, 55, 0.5)"
+      earningsCtx.shadowBlur = 10
+      earningsCtx.fillText("Earnings", canvasWidth / 2, 40)
+      earningsCtx.shadowBlur = 0
 
-      if (item.earnings > 0) {
-        earningsCtx.fillText(`£${item.earnings.toFixed(2)}`, x, y - 10)
-      }
-    })
-
-    earningsCtx.stroke()
-
-    // Draw title
-    earningsCtx.fillStyle = "#1a1814"
-    earningsCtx.font = "16px var(--font-serif)"
-    earningsCtx.textAlign = "center"
-    earningsCtx.fillText("Earnings", canvasWidth / 2, 20)
+      // Hidden feather in chart (very subtle)
+      earningsCtx.fillStyle = "rgba(212, 175, 55, 0.05)"
+      earningsCtx.beginPath()
+      earningsCtx.moveTo(canvasWidth / 2, canvasHeight / 2 - 20)
+      earningsCtx.bezierCurveTo(
+        canvasWidth / 2 + 20,
+        canvasHeight / 2,
+        canvasWidth / 2 - 20,
+        canvasHeight / 2 + 20,
+        canvasWidth / 2,
+        canvasHeight / 2 + 40,
+      )
+      earningsCtx.fill()
+    }
   }
 
   return (
@@ -340,7 +442,7 @@ export default function AnalyticsPage() {
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
-            <span className="logo-text">Tempus</span>
+            <span className="logo-text">Infernal Chronos</span>
           </Link>
           <nav className="nav">
             <Link href="/dashboard" className="nav-link">
@@ -361,9 +463,11 @@ export default function AnalyticsPage() {
       </header>
       <main className="main">
         <div className="container">
-          <div className="card baroque-border">
-            <div className="ornament ornament-1"></div>
-            <div className="ornament ornament-2"></div>
+          <div className="card lucifer-border chiaroscuro">
+            <div className="corner-tl"></div>
+            <div className="corner-tr"></div>
+            <div className="corner-bl"></div>
+            <div className="corner-br"></div>
             <div className="card-header">
               <h2 className="card-title">Work Analytics</h2>
               <p className="card-description">Visualize your work patterns and earnings</p>
@@ -393,42 +497,63 @@ export default function AnalyticsPage() {
                 <button className="button button-secondary" onClick={handlePrevious}>
                   Previous
                 </button>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem" }}>{getPeriodLabel()}</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem", color: "var(--gold)" }}>
+                  {getPeriodLabel()}
+                </div>
                 <button className="button button-secondary" onClick={handleNext}>
                   Next
                 </button>
               </div>
 
               <div className="stats-grid" style={{ marginBottom: "2rem" }}>
-                <div className="stat-card">
+                <div className="stat-card chiaroscuro">
                   <div className="stat-label">Total Hours</div>
                   <div className="stat-value">{formatDuration(totalHours)}</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card chiaroscuro">
                   <div className="stat-label">Total Earnings</div>
                   <div className="stat-value">{formatMoney(totalEarnings)}</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card chiaroscuro">
                   <div className="stat-label">Average Hours</div>
                   <div className="stat-value">{formatDuration(averageHoursPerDay)}</div>
                 </div>
               </div>
 
-              <div className="chart-container">
+              <div className="chart-container chiaroscuro">
                 <canvas ref={hoursChartRef} width="800" height="300"></canvas>
               </div>
 
-              <div className="chart-container">
+              <div className="chart-container chiaroscuro">
                 <canvas ref={earningsChartRef} width="800" height="300"></canvas>
               </div>
+              <div className="hidden-message hidden-message-1">Numbers are the language of the divine</div>
+              <div className="hidden-message hidden-message-2">Time is the currency of mortality</div>
             </div>
           </div>
         </div>
       </main>
       <footer className="footer">
         <div className="container">
-          <div className="baroque-divider"></div>
-          <p>&copy; {new Date().getFullYear()} Tempus. All rights reserved.</p>
+          <div className="infernal-divider"></div>
+          <div className="infernal-medallion">
+            <div className="medallion-content">IC</div>
+          </div>
+          <p>&copy; {new Date().getFullYear()} Infernal Chronos. All rights reserved.</p>
+          <div className="piano-keys">
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+          </div>
         </div>
       </footer>
     </div>
