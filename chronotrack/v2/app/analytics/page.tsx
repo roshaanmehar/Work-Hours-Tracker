@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import Link from "next/link"
 import {
   format,
   startOfWeek,
@@ -19,38 +18,21 @@ import {
 } from "date-fns"
 import { useTimeStore } from "@/lib/store"
 import { calculateDuration, formatDuration, formatMoney } from "@/lib/utils"
-import ThemeToggle from "@/components/theme-toggle"
+import LuciferHeader from "@/components/lucifer-header"
+import LuciferFooter from "@/components/lucifer-footer"
 
 export default function AnalyticsPage() {
-  const { shifts, loadData } = useTimeStore()
-  const [mounted, setMounted] = useState(false)
+  const { shifts, hourlyRate } = useTimeStore()
   const [dateRange, setDateRange] = useState("week")
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [scrolled, setScrolled] = useState(false)
-  const hoursChartRef = useRef(null)
-  const earningsChartRef = useRef(null)
+  const hoursChartRef = useRef<HTMLCanvasElement>(null)
+  const earningsChartRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    loadData()
-    setMounted(true)
-
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [loadData])
-
-  useEffect(() => {
-    if (mounted && shifts.length > 0) {
+    if (shifts.length > 0) {
       renderCharts()
     }
-  }, [mounted, shifts, dateRange, currentDate])
-
-  if (!mounted) {
-    return null
-  }
+  }, [shifts, dateRange, currentDate])
 
   // Get date range based on selected period
   const getDateRange = () => {
@@ -120,7 +102,7 @@ export default function AnalyticsPage() {
           date: format(day, "EEE"),
           fullDate: format(day, "yyyy-MM-dd"),
           hours,
-          earnings: hours * 12.5,
+          earnings: hours * hourlyRate,
         }
       })
     } else if (dateRange === "month") {
@@ -146,7 +128,7 @@ export default function AnalyticsPage() {
           date: format(day, "d"),
           fullDate: format(day, "yyyy-MM-dd"),
           hours,
-          earnings: hours * 12.5,
+          earnings: hours * hourlyRate,
         }
       })
     } else {
@@ -171,7 +153,7 @@ export default function AnalyticsPage() {
           date: format(month, "MMM"),
           fullDate: format(month, "yyyy-MM"),
           hours,
-          earnings: hours * 12.5,
+          earnings: hours * hourlyRate,
         }
       })
     }
@@ -181,7 +163,7 @@ export default function AnalyticsPage() {
 
   // Calculate totals
   const totalHours = chartData.reduce((acc, item) => acc + item.hours, 0)
-  const totalEarnings = totalHours * 12.5
+  const totalEarnings = totalHours * hourlyRate
   const averageHoursPerDay = totalHours / chartData.length || 0
 
   // Calculate period label
@@ -203,6 +185,8 @@ export default function AnalyticsPage() {
     const earningsCanvas = earningsChartRef.current
     const hoursCtx = hoursCanvas.getContext("2d")
     const earningsCtx = earningsCanvas.getContext("2d")
+
+    if (!hoursCtx || !earningsCtx) return
 
     // Clear canvases
     hoursCtx.clearRect(0, 0, hoursCanvas.width, hoursCanvas.height)
@@ -246,10 +230,12 @@ export default function AnalyticsPage() {
 
     patternImg.onload = () => {
       const pattern = hoursCtx.createPattern(patternImg, "repeat")
-      hoursCtx.fillStyle = pattern
-      hoursCtx.globalAlpha = 0.1
-      hoursCtx.fillRect(0, 0, canvasWidth, canvasHeight)
-      hoursCtx.globalAlpha = 1.0
+      if (pattern) {
+        hoursCtx.fillStyle = pattern
+        hoursCtx.globalAlpha = 0.1
+        hoursCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+        hoursCtx.globalAlpha = 1.0
+      }
 
       // Draw axes
       hoursCtx.strokeStyle = "#3a3428"
@@ -334,10 +320,12 @@ export default function AnalyticsPage() {
 
     earningsPatternImg.onload = () => {
       const pattern = earningsCtx.createPattern(earningsPatternImg, "repeat")
-      earningsCtx.fillStyle = pattern
-      earningsCtx.globalAlpha = 0.1
-      earningsCtx.fillRect(0, 0, canvasWidth, canvasHeight)
-      earningsCtx.globalAlpha = 1.0
+      if (pattern) {
+        earningsCtx.fillStyle = pattern
+        earningsCtx.globalAlpha = 0.1
+        earningsCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+        earningsCtx.globalAlpha = 1.0
+      }
 
       // Draw axes
       earningsCtx.strokeStyle = "#3a3428"
@@ -422,140 +410,84 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="page">
-      <header className={`header ${scrolled ? "scrolled" : ""}`}>
-        <div className="container header-content">
-          <Link href="/dashboard" className="logo">
-            <div className="logo-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </div>
-            <span className="logo-text">Infernal Chronos</span>
-          </Link>
-          <nav className="nav">
-            <Link href="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
-            <Link href="/history" className="nav-link">
-              History
-            </Link>
-            <Link href="/analytics" className="nav-link active">
-              Analytics
-            </Link>
-            <Link href="/settings" className="nav-link">
-              Settings
-            </Link>
-            <ThemeToggle />
-          </nav>
-        </div>
-      </header>
-      <main className="main">
-        <div className="container">
-          <div className="card lucifer-border chiaroscuro">
-            <div className="corner-tl"></div>
-            <div className="corner-tr"></div>
-            <div className="corner-bl"></div>
-            <div className="corner-br"></div>
-            <div className="card-header">
-              <h2 className="card-title">Work Analytics</h2>
-              <p className="card-description">Visualize your work patterns and earnings</p>
-            </div>
-            <div className="card-content">
-              <div className="tabs">
-                <div className={`tab ${dateRange === "week" ? "active" : ""}`} onClick={() => setDateRange("week")}>
-                  Week
-                </div>
-                <div className={`tab ${dateRange === "month" ? "active" : ""}`} onClick={() => setDateRange("month")}>
-                  Month
-                </div>
-                <div className={`tab ${dateRange === "year" ? "active" : ""}`} onClick={() => setDateRange("year")}>
-                  Year
-                </div>
-              </div>
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <LuciferHeader activePage="analytics" />
 
+      <main className="flex-1 py-8">
+        <div className="container mx-auto px-4">
+          <div className="card lucifer-border chiaroscuro p-8">
+            <div className="hidden-message absolute top-4 right-4">Numbers are the language of the divine</div>
+            <div className="hidden-message absolute bottom-4 left-4">Time is the currency of mortality</div>
+
+            <div className="mb-6 text-center">
+              <h2 className="text-3xl font-bold text-[#d4af37] mb-2">Work Analytics</h2>
+              <p className="text-lg opacity-70 italic">Visualize your work patterns and earnings</p>
+            </div>
+
+            <div className="flex border-b border-[#d4af37] mb-6">
               <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "1rem",
-                  margin: "1rem 0",
-                }}
+                className={`px-8 py-4 text-lg font-serif font-semibold cursor-pointer relative ${dateRange === "week" ? "text-[#d4af37] border-b-2 border-[#d4af37]" : ""}`}
+                onClick={() => setDateRange("week")}
               >
-                <button className="button button-secondary" onClick={handlePrevious}>
-                  Previous
-                </button>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem", color: "var(--gold)" }}>
-                  {getPeriodLabel()}
-                </div>
-                <button className="button button-secondary" onClick={handleNext}>
-                  Next
-                </button>
+                Week
               </div>
+              <div
+                className={`px-8 py-4 text-lg font-serif font-semibold cursor-pointer relative ${dateRange === "month" ? "text-[#d4af37] border-b-2 border-[#d4af37]" : ""}`}
+                onClick={() => setDateRange("month")}
+              >
+                Month
+              </div>
+              <div
+                className={`px-8 py-4 text-lg font-serif font-semibold cursor-pointer relative ${dateRange === "year" ? "text-[#d4af37] border-b-2 border-[#d4af37]" : ""}`}
+                onClick={() => setDateRange("year")}
+              >
+                Year
+              </div>
+            </div>
 
-              <div className="stats-grid" style={{ marginBottom: "2rem" }}>
-                <div className="stat-card chiaroscuro">
-                  <div className="stat-label">Total Hours</div>
-                  <div className="stat-value">{formatDuration(totalHours)}</div>
-                </div>
-                <div className="stat-card chiaroscuro">
-                  <div className="stat-label">Total Earnings</div>
-                  <div className="stat-value">{formatMoney(totalEarnings)}</div>
-                </div>
-                <div className="stat-card chiaroscuro">
-                  <div className="stat-label">Average Hours</div>
-                  <div className="stat-value">{formatDuration(averageHoursPerDay)}</div>
-                </div>
-              </div>
+            <div className="flex justify-center items-center gap-4 mb-6">
+              <button
+                className="hellfire-btn bg-transparent border border-[#d4af37] px-4 py-2 text-foreground hover:bg-[rgba(212,175,55,0.1)] transition-colors duration-300"
+                onClick={handlePrevious}
+              >
+                Previous
+              </button>
+              <div className="font-serif text-xl text-[#d4af37]">{getPeriodLabel()}</div>
+              <button
+                className="hellfire-btn bg-transparent border border-[#d4af37] px-4 py-2 text-foreground hover:bg-[rgba(212,175,55,0.1)] transition-colors duration-300"
+                onClick={handleNext}
+              >
+                Next
+              </button>
+            </div>
 
-              <div className="chart-container chiaroscuro">
-                <canvas ref={hoursChartRef} width="800" height="300"></canvas>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="stat-card chiaroscuro">
+                <div className="stat-label">Total Hours</div>
+                <div className="stat-value">{formatDuration(totalHours)}</div>
               </div>
+              <div className="stat-card chiaroscuro">
+                <div className="stat-label">Total Earnings</div>
+                <div className="stat-value">{formatMoney(totalEarnings)}</div>
+              </div>
+              <div className="stat-card chiaroscuro">
+                <div className="stat-label">Average Hours</div>
+                <div className="stat-value">{formatDuration(averageHoursPerDay)}</div>
+              </div>
+            </div>
 
-              <div className="chart-container chiaroscuro">
-                <canvas ref={earningsChartRef} width="800" height="300"></canvas>
-              </div>
-              <div className="hidden-message hidden-message-1">Numbers are the language of the divine</div>
-              <div className="hidden-message hidden-message-2">Time is the currency of mortality</div>
+            <div className="relative border border-[#d4af37] p-4 mb-8 chiaroscuro">
+              <canvas ref={hoursChartRef} width="800" height="300"></canvas>
+            </div>
+
+            <div className="relative border border-[#d4af37] p-4 chiaroscuro">
+              <canvas ref={earningsChartRef} width="800" height="300"></canvas>
             </div>
           </div>
         </div>
       </main>
-      <footer className="footer">
-        <div className="container">
-          <div className="infernal-divider"></div>
-          <div className="infernal-medallion">
-            <div className="medallion-content">IC</div>
-          </div>
-          <p>&copy; {new Date().getFullYear()} Infernal Chronos. All rights reserved.</p>
-          <div className="piano-keys">
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-          </div>
-        </div>
-      </footer>
+
+      <LuciferFooter />
     </div>
   )
 }
