@@ -3,39 +3,33 @@
 import { useEffect, useState } from "react"
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState("light")
+  const [mounted, setMounted] = useState(false)
+  const [isDark, setIsDark] = useState(true)
 
   useEffect(() => {
-    // Check local storage or system preference
-    const savedTheme = localStorage.getItem("theme")
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-
-    const currentTheme = savedTheme || systemTheme
-    setTheme(currentTheme)
-
-    if (currentTheme === "dark") {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
+    setMounted(true)
+    const isLight = document.documentElement.classList.contains("light")
+    setIsDark(!isLight)
   }, [])
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light"
-    setTheme(newTheme)
+    const newIsDark = !isDark
+    setIsDark(newIsDark)
 
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark")
+    if (newIsDark) {
+      document.documentElement.classList.remove("light")
+      localStorage.setItem("theme", "dark")
     } else {
-      document.documentElement.classList.remove("dark")
+      document.documentElement.classList.add("light")
+      localStorage.setItem("theme", "light")
     }
-
-    localStorage.setItem("theme", newTheme)
   }
+
+  if (!mounted) return null
 
   return (
     <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-      {theme === "light" ? (
+      {isDark ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
