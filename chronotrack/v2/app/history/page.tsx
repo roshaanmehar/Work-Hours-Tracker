@@ -97,7 +97,7 @@ export default function HistoryPage() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.setAttribute("href", url)
-    link.setAttribute("download", `tempus-export-${format(new Date(), "yyyy-MM-dd")}.csv`)
+    link.setAttribute("download", `infernal-chronos-export-${format(new Date(), "yyyy-MM-dd")}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -124,7 +124,7 @@ export default function HistoryPage() {
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
-            <span className="logo-text">Tempus</span>
+            <span className="logo-text">Infernal Chronos</span>
           </Link>
           <nav className="nav">
             <Link href="/dashboard" className="nav-link">
@@ -145,18 +145,21 @@ export default function HistoryPage() {
       </header>
       <main className="main">
         <div className="container">
-          <div className="card baroque-border">
-            <div className="ornament ornament-1"></div>
-            <div className="ornament ornament-2"></div>
+          <div className="card lucifer-border chiaroscuro">
+            <div className="corner-tl"></div>
+            <div className="corner-tr"></div>
+            <div className="corner-bl"></div>
+            <div className="corner-br"></div>
+
             <div className="card-header">
               <h2 className="card-title">Shift History</h2>
               <p className="card-description">View and manage your past shifts</p>
             </div>
             <div className="card-content">
-              <div className="form-group" style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+              <div className="form-group" style={{ display: "flex", gap: "2rem", marginBottom: "3rem" }}>
                 <div>
                   <label className="label" htmlFor="filter">
-                    Filter
+                    Filter Period
                   </label>
                   <select id="filter" className="input" value={filter} onChange={(e) => setFilter(e.target.value)}>
                     <option value="all">All Time</option>
@@ -167,7 +170,7 @@ export default function HistoryPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label className="label" htmlFor="search">
-                    Search
+                    Search Records
                   </label>
                   <input
                     id="search"
@@ -180,67 +183,91 @@ export default function HistoryPage() {
                 </div>
                 <div style={{ alignSelf: "flex-end" }}>
                   <button onClick={handleExport} className="button button-secondary">
-                    Export CSV
+                    Export to CSV
                   </button>
                 </div>
               </div>
 
-              <div className="stats-grid" style={{ marginBottom: "2rem" }}>
-                <div className="stat-card">
+              <div className="stats-grid" style={{ marginBottom: "3rem" }}>
+                <div className="stat-card chiaroscuro">
                   <div className="stat-label">Total Hours</div>
                   <div className="stat-value">{formatDuration(totalHours)}</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card chiaroscuro">
                   <div className="stat-label">Total Earnings</div>
                   <div className="stat-value">{formatMoney(totalEarnings)}</div>
                 </div>
               </div>
 
-              {filteredShifts.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "3rem 0" }}>
-                  <p>No shifts found</p>
-                </div>
-              ) : (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Start Time</th>
-                      <th>End Time</th>
-                      <th>Duration</th>
-                      <th>Earnings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredShifts.map((shift) => {
-                      const startDate = new Date(shift.startTime)
-                      const endDate = shift.endTime ? new Date(shift.endTime) : null
-                      const duration = shift.endTime ? calculateDuration(shift.startTime, shift.endTime) : 0
-                      const earnings = duration * 12.5
+              <div className="infernal-scroll">
+                {filteredShifts.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "3rem 0" }}>
+                    <p style={{ fontSize: "1.5rem", fontFamily: "var(--font-serif)" }}>No shifts found</p>
+                  </div>
+                ) : (
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th>Earnings</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredShifts.map((shift) => {
+                        const startDate = new Date(shift.startTime)
+                        const endDate = shift.endTime ? new Date(shift.endTime) : null
+                        const duration = shift.endTime ? calculateDuration(shift.startTime, shift.endTime) : 0
+                        const earnings = duration * 12.5
 
-                      return (
-                        <tr key={shift.id}>
-                          <td>{format(startDate, "PPP")}</td>
-                          <td>{format(startDate, "p")}</td>
-                          <td>
-                            {endDate ? format(endDate, "p") : <span className="badge badge-warning">In progress</span>}
-                          </td>
-                          <td>{formatDuration(duration)}</td>
-                          <td>{formatMoney(earnings)}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              )}
+                        return (
+                          <tr key={shift.id}>
+                            <td>{format(startDate, "PPP")}</td>
+                            <td>{format(startDate, "p")}</td>
+                            <td>
+                              {endDate ? (
+                                format(endDate, "p")
+                              ) : (
+                                <span className="badge badge-warning">In progress</span>
+                              )}
+                            </td>
+                            <td>{formatDuration(duration)}</td>
+                            <td>{formatMoney(earnings)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              <div className="hidden-message hidden-message-1">Every second counts in the ledger of sin</div>
             </div>
           </div>
         </div>
       </main>
       <footer className="footer">
         <div className="container">
-          <div className="baroque-divider"></div>
-          <p>&copy; {new Date().getFullYear()} Tempus. All rights reserved.</p>
+          <div className="infernal-divider"></div>
+          <div className="infernal-medallion">
+            <div className="medallion-content">IC</div>
+          </div>
+          <p>&copy; {new Date().getFullYear()} Infernal Chronos. All rights reserved.</p>
+          <div className="piano-keys">
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+          </div>
         </div>
       </footer>
     </div>
