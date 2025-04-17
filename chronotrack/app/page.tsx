@@ -12,7 +12,7 @@ export default function Home() {
           ))}
         </div>
       </div>
-
+      
       <header className={styles.header}>
         <h1 className={styles.logo}>
           <span className={styles.logoText}>CHRONO</span>
@@ -37,12 +37,8 @@ export default function Home() {
               <div className={styles.clockHand} id="hours-hand"></div>
               <div className={styles.clockCenter}></div>
             </div>
-            <div className={styles.digitalTime} id="current-time">
-              00:00:00
-            </div>
-            <div className={styles.date} id="current-date">
-              Loading...
-            </div>
+            <div className={styles.digitalTime} id="current-time">00:00:00</div>
+            <div className={styles.date} id="current-date">Loading...</div>
           </div>
 
           <div className={styles.buttonContainer}>
@@ -59,21 +55,15 @@ export default function Home() {
           <div className={styles.stats}>
             <div className={styles.statItem}>
               <span className={styles.statLabel}>TODAY</span>
-              <span className={styles.statValue} id="today-hours">
-                0h 0m
-              </span>
+              <span className={styles.statValue} id="today-hours">0h 0m</span>
             </div>
             <div className={styles.statItem}>
               <span className={styles.statLabel}>THIS WEEK</span>
-              <span className={styles.statValue} id="week-hours">
-                0h 0m
-              </span>
+              <span className={styles.statValue} id="week-hours">0h 0m</span>
             </div>
             <div className={styles.statItem}>
               <span className={styles.statLabel}>EARNINGS</span>
-              <span className={styles.statValue} id="earnings">
-                $0.00
-              </span>
+              <span className={styles.statValue} id="earnings">$0.00</span>
             </div>
           </div>
 
@@ -85,6 +75,22 @@ export default function Home() {
             <div className={styles.progressBar}>
               <div className={styles.progressRegular} id="progress-regular"></div>
               <div className={styles.progressOvertime} id="progress-overtime"></div>
+            </div>
+          </div>
+          
+          <div className={styles.dataManagement}>
+            <div className={styles.syncStatus} id="sync-status"></div>
+            <div className={styles.actionButtons}>
+              <button className={styles.actionButton} id="export-btn">
+                Export Data
+              </button>
+              <button className={styles.actionButton} id="import-btn">
+                Import Data
+              </button>
+              <input type="file" id="file-input" className={styles.fileInput} accept=".json" />
+              <button className={styles.actionButton} id="sync-btn">
+                Sync to Sheets
+              </button>
             </div>
           </div>
         </div>
