@@ -1,95 +1,95 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link"
+import styles from "./page.module.css"
+import TimeTrackerClient from "./client"
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className={styles.container}>
+      <div className={styles.background}>
+        <div className={styles.grid}>
+          {Array.from({ length: 100 }).map((_, i) => (
+            <div key={i} className={styles.gridCell} style={{ animationDelay: `${Math.random() * 5}s` }} />
+          ))}
+        </div>
+      </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+      <header className={styles.header}>
+        <h1 className={styles.logo}>
+          <span className={styles.logoText}>CHRONO</span>
+          <span className={styles.logoAccent}>TRACK</span>
+        </h1>
+        <nav className={styles.nav}>
+          <Link href="/analytics" className={styles.navLink}>
+            Analytics
+          </Link>
+          <Link href="/history" className={styles.navLink}>
+            History
+          </Link>
+        </nav>
+      </header>
+
+      <main className={styles.main}>
+        <div className={styles.card}>
+          <div className={styles.clockContainer}>
+            <div className={styles.clockFace}>
+              <div className={styles.clockHand} id="seconds-hand"></div>
+              <div className={styles.clockHand} id="minutes-hand"></div>
+              <div className={styles.clockHand} id="hours-hand"></div>
+              <div className={styles.clockCenter}></div>
+            </div>
+            <div className={styles.digitalTime} id="current-time">
+              00:00:00
+            </div>
+            <div className={styles.date} id="current-date">
+              Loading...
+            </div>
+          </div>
+
+          <div className={styles.buttonContainer}>
+            <button className={`${styles.button} ${styles.clockInButton}`} id="clock-in-btn">
+              <span className={styles.buttonText}>CLOCK IN</span>
+              <div className={styles.buttonEffect}></div>
+            </button>
+            <button className={`${styles.button} ${styles.clockOutButton}`} id="clock-out-btn" disabled>
+              <span className={styles.buttonText}>CLOCK OUT</span>
+              <div className={styles.buttonEffect}></div>
+            </button>
+          </div>
+
+          <div className={styles.stats}>
+            <div className={styles.statItem}>
+              <span className={styles.statLabel}>TODAY</span>
+              <span className={styles.statValue} id="today-hours">
+                0h 0m
+              </span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statLabel}>THIS WEEK</span>
+              <span className={styles.statValue} id="week-hours">
+                0h 0m
+              </span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statLabel}>EARNINGS</span>
+              <span className={styles.statValue} id="earnings">
+                $0.00
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.progressContainer}>
+            <div className={styles.progressLabel}>
+              <span>Weekly Target: 20h</span>
+              <span id="progress-text">0%</span>
+            </div>
+            <div className={styles.progressBar}>
+              <div className={styles.progressRegular} id="progress-regular"></div>
+              <div className={styles.progressOvertime} id="progress-overtime"></div>
+            </div>
+          </div>
         </div>
       </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <TimeTrackerClient />
     </div>
-  );
+  )
 }
