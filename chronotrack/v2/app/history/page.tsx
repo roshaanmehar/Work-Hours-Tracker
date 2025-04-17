@@ -1,34 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
+import { useState } from "react"
 import { format } from "date-fns"
 import { useTimeStore } from "@/lib/store"
 import { calculateDuration, formatDuration, formatMoney } from "@/lib/utils"
-import ThemeToggle from "@/components/theme-toggle"
+import LuciferHeader from "@/components/lucifer-header"
+import LuciferFooter from "@/components/lucifer-footer"
 
 export default function HistoryPage() {
-  const { shifts, loadData } = useTimeStore()
-  const [mounted, setMounted] = useState(false)
+  const { shifts, hourlyRate } = useTimeStore()
   const [filter, setFilter] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    loadData()
-    setMounted(true)
-
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [loadData])
-
-  if (!mounted) {
-    return null
-  }
 
   const filteredShifts = shifts
     .filter((shift) => {
@@ -70,7 +52,7 @@ export default function HistoryPage() {
     return acc
   }, 0)
 
-  const totalEarnings = totalHours * 12.5
+  const totalEarnings = totalHours * hourlyRate
 
   const handleExport = () => {
     const csvContent = [
@@ -79,7 +61,7 @@ export default function HistoryPage() {
         const startDate = new Date(shift.startTime)
         const endDate = shift.endTime ? new Date(shift.endTime) : null
         const duration = shift.endTime ? calculateDuration(shift.startTime, shift.endTime) : 0
-        const earnings = duration * 12.5
+        const earnings = duration * hourlyRate
 
         return [
           format(startDate, "PPP"),
@@ -104,108 +86,80 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="page">
-      <header className={`header ${scrolled ? "scrolled" : ""}`}>
-        <div className="container header-content">
-          <Link href="/dashboard" className="logo">
-            <div className="logo-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </div>
-            <span className="logo-text">Infernal Chronos</span>
-          </Link>
-          <nav className="nav">
-            <Link href="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
-            <Link href="/history" className="nav-link active">
-              History
-            </Link>
-            <Link href="/analytics" className="nav-link">
-              Analytics
-            </Link>
-            <Link href="/settings" className="nav-link">
-              Settings
-            </Link>
-            <ThemeToggle />
-          </nav>
-        </div>
-      </header>
-      <main className="main">
-        <div className="container">
-          <div className="card lucifer-border chiaroscuro">
-            <div className="corner-tl"></div>
-            <div className="corner-tr"></div>
-            <div className="corner-bl"></div>
-            <div className="corner-br"></div>
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <LuciferHeader activePage="history" />
 
-            <div className="card-header">
-              <h2 className="card-title">Shift History</h2>
-              <p className="card-description">View and manage your past shifts</p>
+      <main className="flex-1 py-8">
+        <div className="container mx-auto px-4">
+          <div className="card lucifer-border chiaroscuro p-8">
+            <div className="hidden-message absolute top-4 right-4">Every second counts in the ledger of sin</div>
+
+            <div className="mb-6 text-center">
+              <h2 className="text-3xl font-bold text-[#d4af37] mb-2">Shift History</h2>
+              <p className="text-lg opacity-70 italic">View and manage your past shifts</p>
             </div>
-            <div className="card-content">
-              <div className="form-group" style={{ display: "flex", gap: "2rem", marginBottom: "3rem" }}>
-                <div>
-                  <label className="label" htmlFor="filter">
-                    Filter Period
-                  </label>
-                  <select id="filter" className="input" value={filter} onChange={(e) => setFilter(e.target.value)}>
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label className="label" htmlFor="search">
-                    Search Records
-                  </label>
-                  <input
-                    id="search"
-                    type="text"
-                    className="input"
-                    placeholder="Search by date..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div style={{ alignSelf: "flex-end" }}>
-                  <button onClick={handleExport} className="button button-secondary">
-                    Export to CSV
-                  </button>
-                </div>
+
+            <div className="flex flex-col md:flex-row gap-6 mb-8">
+              <div className="md:w-1/4">
+                <label className="block text-[#d4af37] text-lg font-serif mb-2" htmlFor="filter">
+                  Filter Period
+                </label>
+                <select
+                  id="filter"
+                  className="w-full p-3 border border-[#d4af37] bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#8b0000] focus:border-[#d4af37]"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                </select>
               </div>
 
-              <div className="stats-grid" style={{ marginBottom: "3rem" }}>
-                <div className="stat-card chiaroscuro">
-                  <div className="stat-label">Total Hours</div>
-                  <div className="stat-value">{formatDuration(totalHours)}</div>
-                </div>
-                <div className="stat-card chiaroscuro">
-                  <div className="stat-label">Total Earnings</div>
-                  <div className="stat-value">{formatMoney(totalEarnings)}</div>
-                </div>
+              <div className="md:w-2/4">
+                <label className="block text-[#d4af37] text-lg font-serif mb-2" htmlFor="search">
+                  Search Records
+                </label>
+                <input
+                  id="search"
+                  type="text"
+                  className="w-full p-3 border border-[#d4af37] bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#8b0000] focus:border-[#d4af37]"
+                  placeholder="Search by date..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
 
-              <div className="infernal-scroll">
-                {filteredShifts.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "3rem 0" }}>
-                    <p style={{ fontSize: "1.5rem", fontFamily: "var(--font-serif)" }}>No shifts found</p>
-                  </div>
-                ) : (
-                  <table className="table">
+              <div className="md:w-1/4 flex items-end">
+                <button
+                  onClick={handleExport}
+                  className="hellfire-btn w-full bg-transparent border border-[#d4af37] p-3 text-foreground hover:bg-[rgba(212,175,55,0.1)] transition-colors duration-300"
+                >
+                  Export to CSV
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="stat-card chiaroscuro">
+                <div className="stat-label">Total Hours</div>
+                <div className="stat-value">{formatDuration(totalHours)}</div>
+              </div>
+              <div className="stat-card chiaroscuro">
+                <div className="stat-label">Total Earnings</div>
+                <div className="stat-value">{formatMoney(totalEarnings)}</div>
+              </div>
+            </div>
+
+            <div className="relative border border-[#d4af37] p-6 chiaroscuro">
+              {filteredShifts.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-2xl font-serif">No shifts found</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="infernal-table w-full">
                     <thead>
                       <tr>
                         <th>Date</th>
@@ -220,17 +174,19 @@ export default function HistoryPage() {
                         const startDate = new Date(shift.startTime)
                         const endDate = shift.endTime ? new Date(shift.endTime) : null
                         const duration = shift.endTime ? calculateDuration(shift.startTime, shift.endTime) : 0
-                        const earnings = duration * 12.5
+                        const earnings = duration * hourlyRate
 
                         return (
-                          <tr key={shift.id}>
+                          <tr key={shift.id} className="relative">
                             <td>{format(startDate, "PPP")}</td>
                             <td>{format(startDate, "p")}</td>
                             <td>
                               {endDate ? (
                                 format(endDate, "p")
                               ) : (
-                                <span className="badge badge-warning">In progress</span>
+                                <span className="inline-block px-3 py-1 text-xs bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border border-[#f59e0b]">
+                                  In progress
+                                </span>
                               )}
                             </td>
                             <td>{formatDuration(duration)}</td>
@@ -240,36 +196,14 @@ export default function HistoryPage() {
                       })}
                     </tbody>
                   </table>
-                )}
-              </div>
-              <div className="hidden-message hidden-message-1">Every second counts in the ledger of sin</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </main>
-      <footer className="footer">
-        <div className="container">
-          <div className="infernal-divider"></div>
-          <div className="infernal-medallion">
-            <div className="medallion-content">IC</div>
-          </div>
-          <p>&copy; {new Date().getFullYear()} Infernal Chronos. All rights reserved.</p>
-          <div className="piano-keys">
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-            <div className="piano-key black"></div>
-            <div className="piano-key"></div>
-          </div>
-        </div>
-      </footer>
+
+      <LuciferFooter />
     </div>
   )
 }
