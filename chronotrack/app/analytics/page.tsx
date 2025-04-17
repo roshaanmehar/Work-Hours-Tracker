@@ -1,304 +1,433 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
-import styles from "./page.module.css"
-import type { TimeEntry } from "@/lib/types"
-import { formatDuration } from "@/lib/utils"
+import { getAllTimeEntries, getSettings } from "@/components/database"
+import { exportToGoogleSheets, prepareTimeEntriesForSheets } from "@/lib/google-sheets"
 
 export default function AnalyticsPage() {
-  const [entries, setEntries] = useState<TimeEntry[]>([])
-  const [weeklyData, setWeeklyData] = useState<Array<{ day: string; hours: number; earnings: number }>>([])
-  const [monthlyData, setMonthlyData] = useState<Array<{ day: number; hours: number; earnings: number }>>([])
-  const [stats, setStats] = useState({
-    totalHours: 0,
-    weeklyHours: 0,
-    monthlyHours: 0,
-    averagePerDay: 0,
-    totalEarnings: 0,
-    regularHours: 0,
-    overtimeHours: 0,
-    regularEarnings: 0,
-    overtimeEarnings: 0,
+  const [timeEntries, setTimeEntries] = useState([])
+  const [settings, setSettings] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [reportType, setReportType] = useState("weekly")
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().setDate(new Date().getDate() - 7)),
+    end: new Date(),
   })
-  const [activeTab, setActiveTab] = useState<"weekly" | "monthly">("weekly")
+  const [customStartDate, setCustomStartDate] = useState(
+    new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split("T")[0],
+  )
+  const [customEndDate, setCustomEndDate] = useState(new Date().toISOString().split("T")[0])
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState("")
 
-  const HOURLY_RATE = 12.5
-  const WEEKLY_TARGET_HOURS = 20
-
+  // Load data on component mount
   useEffect(() => {
-    const storedEntries = localStorage.getItem("timeEntries")
-    if (storedEntries) {
-      const parsedEntries = JSON.parse(storedEntries) as TimeEntry[]
-      setEntries(parsedEntries)
+    const loadData = async () => {
+      try {
+        const entries = await getAllTimeEntries()
+        const userSettings = await getSettings()
 
-      // Process data for charts and stats
-      processData(parsedEntries)
+        setTimeEntries(entries)
+        setSettings(userSettings)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Error loading data:", error)
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [])
 
-  const processData = (entries: TimeEntry[]) => {
+  // Update date range when report type changes
+  useEffect(() => {
     const now = new Date()
+    let start = new Date()
 
-    // Weekly data
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    const dayOfWeek = now.getDay()
+    switch (reportType) {
+      case "daily":
+        start = new Date(now)
+        start.setHours(0, 0, 0, 0)
+        setDateRange({ start, end: now })
+        break
 
-    const weekData = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date()
-      d.setDate(d.getDate() - ((dayOfWeek - i + 7) % 7))
-      return {
-        date: d,
-        day: days[i],
-        hours: 0,
-        earnings: 0,
-      }
-    })
+      case "weekly":
+        start = new Date(now)
+        start.setDate(now.getDate() - 7)
+        setDateRange({ start, end: now })
+        break
 
-    // Monthly data
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+      case "monthly":
+        start = new Date(now)
+        start.setMonth(now.getMonth() - 1)
+        setDateRange({ start, end: now })
+        break
 
-    const monthData = Array.from({ length: daysInMonth }, (_, i) => {
-      return {
-        date: new Date(currentYear, currentMonth, i + 1),
-        day: i + 1,
-        hours: 0,
-        earnings: 0,
-      }
-    })
+      case "custom":
+        setDateRange({
+          start: new Date(customStartDate),
+          end: new Date(customEndDate),
+        })
+        break
+    }
+  }, [reportType, customStartDate, customEndDate])
 
-    // Calculate stats
-    let totalDuration = 0
-    let weeklyDuration = 0
-    let monthlyDuration = 0
-    const daysWithEntries = new Set()
-
-    // Start of week and month
-    const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
-    startOfWeek.setHours(0, 0, 0, 0)
-
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-
-    // Process entries
-    entries.forEach((entry) => {
-      const entryDate = new Date(entry.startTime)
-      const duration = entry.duration || 0
-      const hours = duration / 3600
-      const earnings = hours * HOURLY_RATE
-
-      // Total stats
-      totalDuration += duration
-      daysWithEntries.add(entryDate.toLocaleDateString())
-
-      // Weekly stats
-      if (entryDate >= startOfWeek) {
-        weeklyDuration += duration
-
-        const dayIndex = entryDate.getDay()
-        weekData[dayIndex].hours += hours
-        weekData[dayIndex].earnings += earnings
-      }
-
-      // Monthly stats
-      if (entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear) {
-        monthlyDuration += duration
-
-        const dayIndex = entryDate.getDate() - 1
-        monthData[dayIndex].hours += hours
-        monthData[dayIndex].earnings += earnings
-      }
-    })
-
-    // Calculate regular and overtime hours
-    const weeklyHours = weeklyDuration / 3600
-    const regularHours = Math.min(weeklyHours, WEEKLY_TARGET_HOURS)
-    const overtimeHours = Math.max(0, weeklyHours - WEEKLY_TARGET_HOURS)
-
-    // Calculate earnings
-    const regularEarnings = regularHours * HOURLY_RATE
-    const overtimeEarnings = overtimeHours * HOURLY_RATE * 1.5
-    const totalEarnings = regularEarnings + overtimeEarnings
-
-    // Set state
-    setWeeklyData(weekData)
-    setMonthlyData(monthData)
-    setStats({
-      totalHours: totalDuration / 3600,
-      weeklyHours: weeklyDuration / 3600,
-      monthlyHours: monthlyDuration / 3600,
-      averagePerDay: daysWithEntries.size > 0 ? totalDuration / daysWithEntries.size / 3600 : 0,
-      totalEarnings,
-      regularHours,
-      overtimeHours,
-      regularEarnings,
-      overtimeEarnings,
+  // Handle custom date changes
+  const handleCustomDateChange = () => {
+    setDateRange({
+      start: new Date(customStartDate),
+      end: new Date(customEndDate),
     })
   }
 
-  const getMaxValue = () => {
-    if (activeTab === "weekly") {
-      return Math.max(...weeklyData.map((d) => d.hours)) + 1
-    } else {
-      return Math.max(...monthlyData.map((d) => d.hours)) + 1
+  // Filter entries by current date range
+  const filteredEntries = timeEntries.filter((entry) => {
+    const startTime = new Date(entry.startTime)
+    return startTime >= dateRange.start && startTime <= dateRange.end
+  })
+
+  // Calculate totals
+  const totalDuration = filteredEntries.reduce((total, entry) => {
+    if (!entry.endTime) return total
+
+    const startTime = new Date(entry.startTime)
+    const endTime = new Date(entry.endTime)
+    return total + (endTime.getTime() - startTime.getTime())
+  }, 0)
+
+  const totalHours = totalDuration / (1000 * 60 * 60)
+  const totalEarnings = totalHours * (settings?.hourlyRate || 0)
+
+  // Sync to Google Sheets
+  const syncToGoogleSheets = async () => {
+    try {
+      setIsSyncing(true)
+      setSyncMessage("Syncing to Google Sheets...")
+
+      const spreadsheetId = localStorage.getItem("gs_spreadsheetId")
+      const apiKey = localStorage.getItem("gs_apiKey")
+
+      if (!spreadsheetId || !apiKey) {
+        setSyncMessage("Please set up Google Sheets in Settings first.")
+        return
+      }
+
+      const data = prepareTimeEntriesForSheets(filteredEntries, settings)
+      await exportToGoogleSheets(spreadsheetId, apiKey, data)
+
+      setSyncMessage("Data synced to Google Sheets successfully!")
+    } catch (error) {
+      console.error("Error syncing to Google Sheets:", error)
+      setSyncMessage(`Error syncing: ${error.message || "Unknown error"}`)
+    } finally {
+      setIsSyncing(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="analytics-page">
+        <h1>Analytics</h1>
+        <p>Loading data...</p>
+      </div>
+    )
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.background}>
-        <div className={styles.grid}>
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div key={i} className={styles.gridCell} style={{ animationDelay: `${Math.random() * 5}s` }} />
-          ))}
+    <div className="analytics-page">
+      <h1>Analytics</h1>
+
+      <div className="report-controls">
+        <div className="report-type-selector">
+          <label>Report Type:</label>
+          <div className="button-group">
+            <button onClick={() => setReportType("daily")} className={reportType === "daily" ? "active" : ""}>
+              Daily
+            </button>
+            <button onClick={() => setReportType("weekly")} className={reportType === "weekly" ? "active" : ""}>
+              Weekly
+            </button>
+            <button onClick={() => setReportType("monthly")} className={reportType === "monthly" ? "active" : ""}>
+              Monthly
+            </button>
+            <button onClick={() => setReportType("custom")} className={reportType === "custom" ? "active" : ""}>
+              Custom
+            </button>
+          </div>
+        </div>
+
+        {reportType === "custom" && (
+          <div className="custom-date-range">
+            <div className="date-inputs">
+              <div className="date-input-group">
+                <label htmlFor="start-date">Start Date:</label>
+                <input
+                  id="start-date"
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="date-input-group">
+                <label htmlFor="end-date">End Date:</label>
+                <input
+                  id="end-date"
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <button className="update-button" onClick={handleCustomDateChange}>
+              Update Date Range
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="report-preview">
+        <div className="report-header">
+          <h2>Time Tracking Report</h2>
+          <p className="date-range">
+            {dateRange.start.toLocaleDateString()} to {dateRange.end.toLocaleDateString()}
+          </p>
+        </div>
+
+        <div className="report-summary">
+          <div className="summary-item">
+            <h3>Total Hours</h3>
+            <p className="summary-value">{totalHours.toFixed(2)} hrs</p>
+          </div>
+
+          <div className="summary-item">
+            <h3>Total Earnings</h3>
+            <p className="summary-value">
+              {settings?.currency || "$"}
+              {totalEarnings.toFixed(2)}
+            </p>
+          </div>
+
+          <div className="summary-item">
+            <h3>Entries</h3>
+            <p className="summary-value">{filteredEntries.length}</p>
+          </div>
+        </div>
+
+        <div className="report-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Description</th>
+                <th>Earnings</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEntries.map((entry) => {
+                const startTime = new Date(entry.startTime)
+                const endTime = entry.endTime ? new Date(entry.endTime) : null
+                const duration = endTime ? (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) : 0
+                const earnings = duration * (settings?.hourlyRate || 0)
+
+                return (
+                  <tr key={entry.id}>
+                    <td>{startTime.toLocaleDateString()}</td>
+                    <td>{startTime.toLocaleTimeString()}</td>
+                    <td>{endTime ? endTime.toLocaleTimeString() : "In progress"}</td>
+                    <td>{duration.toFixed(2)} hrs</td>
+                    <td>{entry.description || "N/A"}</td>
+                    <td>
+                      {settings?.currency || "$"}
+                      {earnings.toFixed(2)}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <header className={styles.header}>
-        <Link href="/" className={styles.backButton}>
-          ← Back
-        </Link>
-        <h1 className={styles.title}>Analytics</h1>
-      </header>
+      <div className="sync-section">
+        <button className="sync-button" onClick={syncToGoogleSheets} disabled={isSyncing}>
+          {isSyncing ? "Syncing..." : "Sync to Google Sheets"}
+        </button>
 
-      <main className={styles.main}>
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{formatDuration(stats.weeklyHours * 3600)}</div>
-            <div className={styles.statLabel}>This Week</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>${stats.totalEarnings.toFixed(2)}</div>
-            <div className={styles.statLabel}>Earnings</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{formatDuration(stats.averagePerDay * 3600)}</div>
-            <div className={styles.statLabel}>Avg/Day</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{formatDuration(stats.monthlyHours * 3600)}</div>
-            <div className={styles.statLabel}>This Month</div>
-          </div>
-        </div>
+        {syncMessage && <div className="sync-message">{syncMessage}</div>}
+      </div>
 
-        <div className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <h2>Time Analysis</h2>
-            <div className={styles.tabs}>
-              <button
-                className={`${styles.tab} ${activeTab === "weekly" ? styles.activeTab : ""}`}
-                onClick={() => setActiveTab("weekly")}
-              >
-                Weekly
-              </button>
-              <button
-                className={`${styles.tab} ${activeTab === "monthly" ? styles.activeTab : ""}`}
-                onClick={() => setActiveTab("monthly")}
-              >
-                Monthly
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.chartContainer}>
-            {activeTab === "weekly" ? (
-              <div className={styles.chart}>
-                <div className={styles.chartYAxis}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className={styles.chartYLabel}>
-                      {Math.round((getMaxValue() / 5) * (4 - i))}h
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.chartBars}>
-                  {weeklyData.map((day, i) => (
-                    <div key={i} className={styles.chartBarGroup}>
-                      <div
-                        className={styles.chartBar}
-                        style={{
-                          height: `${(day.hours / getMaxValue()) * 100}%`,
-                          animationDelay: `${i * 0.1}s`,
-                        }}
-                      >
-                        <div className={styles.chartTooltip}>
-                          <div>{formatDuration(day.hours * 3600)}</div>
-                          <div>${day.earnings.toFixed(2)}</div>
-                        </div>
-                      </div>
-                      <div className={styles.chartXLabel}>{day.day.substring(0, 3)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className={styles.chart}>
-                <div className={styles.chartYAxis}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className={styles.chartYLabel}>
-                      {Math.round((getMaxValue() / 5) * (4 - i))}h
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.chartBars}>
-                  {monthlyData.map((day, i) => (
-                    <div key={i} className={styles.chartBarGroup}>
-                      <div
-                        className={styles.chartBar}
-                        style={{
-                          height: `${(day.hours / getMaxValue()) * 100}%`,
-                          animationDelay: `${i * 0.05}s`,
-                        }}
-                      >
-                        <div className={styles.chartTooltip}>
-                          <div>{formatDuration(day.hours * 3600)}</div>
-                          <div>${day.earnings.toFixed(2)}</div>
-                        </div>
-                      </div>
-                      {i % 5 === 0 && <div className={styles.chartXLabel}>{day.day}</div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.earningsCard}>
-          <h2>Weekly Earnings Breakdown</h2>
-          <div className={styles.earningsBreakdown}>
-            <div className={styles.earningsItem}>
-              <div className={styles.earningsLabel}>Regular Hours ({stats.regularHours.toFixed(1)}h)</div>
-              <div className={styles.earningsValue}>${stats.regularEarnings.toFixed(2)}</div>
-            </div>
-            <div className={styles.earningsItem}>
-              <div className={styles.earningsLabel}>Overtime Hours ({stats.overtimeHours.toFixed(1)}h)</div>
-              <div className={styles.earningsValue}>${stats.overtimeEarnings.toFixed(2)}</div>
-            </div>
-            <div className={`${styles.earningsItem} ${styles.earningsTotal}`}>
-              <div className={styles.earningsLabel}>Total</div>
-              <div className={styles.earningsValue}>${stats.totalEarnings.toFixed(2)}</div>
-            </div>
-          </div>
-          <div className={styles.progressContainer}>
-            <div className={styles.progressLabel}>
-              <span>Weekly Target: {WEEKLY_TARGET_HOURS}h</span>
-              <span>{Math.round((stats.weeklyHours / WEEKLY_TARGET_HOURS) * 100)}%</span>
-            </div>
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressRegular}
-                style={{ width: `${Math.min((stats.regularHours / WEEKLY_TARGET_HOURS) * 100, 100)}%` }}
-              ></div>
-              <div
-                className={styles.progressOvertime}
-                style={{ width: `${Math.min((stats.weeklyHours / WEEKLY_TARGET_HOURS) * 100, 100)}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </main>
+      <style jsx>{`
+        .analytics-page {
+          padding: 20px;
+        }
+        
+        h1 {
+          margin-bottom: 20px;
+          border-bottom: 1px solid black;
+          padding-bottom: 10px;
+        }
+        
+        .report-controls {
+          margin-bottom: 20px;
+          padding: 15px;
+          border: 1px solid black;
+          background: white;
+        }
+        
+        .report-type-selector {
+          margin-bottom: 15px;
+        }
+        
+        .button-group {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+          margin-top: 5px;
+        }
+        
+        .button-group button {
+          background: white;
+          border: 1px solid black;
+          padding: 8px 15px;
+          cursor: pointer;
+        }
+        
+        .button-group button.active {
+          background: black;
+          color: white;
+        }
+        
+        .custom-date-range {
+          margin-top: 15px;
+          padding-top: 15px;
+          border-top: 1px solid #ccc;
+        }
+        
+        .date-inputs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+          margin-bottom: 10px;
+        }
+        
+        .date-input-group {
+          flex: 1;
+          min-width: 150px;
+        }
+        
+        label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: bold;
+        }
+        
+        input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid black;
+          background: white;
+        }
+        
+        .update-button {
+          background: black;
+          color: white;
+          border: none;
+          padding: 8px 15px;
+          cursor: pointer;
+        }
+        
+        .report-preview {
+          margin-bottom: 20px;
+          padding: 20px;
+          border: 1px solid black;
+          background: white;
+        }
+        
+        .report-header {
+          margin-bottom: 20px;
+          text-align: center;
+        }
+        
+        .report-header h2 {
+          margin-bottom: 5px;
+        }
+        
+        .date-range {
+          font-style: italic;
+        }
+        
+        .report-summary {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          padding: 15px;
+          border: 1px solid black;
+        }
+        
+        .summary-item {
+          text-align: center;
+          flex: 1;
+        }
+        
+        .summary-item h3 {
+          margin-bottom: 5px;
+        }
+        
+        .summary-value {
+          font-size: 1.2rem;
+          font-weight: bold;
+        }
+        
+        .report-table {
+          overflow-x: auto;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        
+        th, td {
+          border: 1px solid black;
+          padding: 8px;
+          text-align: left;
+        }
+        
+        th {
+          background: #f0f0f0;
+        }
+        
+        .sync-section {
+          margin-top: 20px;
+          padding: 15px;
+          border: 1px solid black;
+          background: white;
+        }
+        
+        .sync-button {
+          background: black;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          cursor: pointer;
+        }
+        
+        .sync-button:disabled {
+          background: #666;
+          cursor: not-allowed;
+        }
+        
+        .sync-message {
+          margin-top: 15px;
+          padding: 10px;
+          border: 1px solid black;
+        }
+      `}</style>
     </div>
   )
 }
