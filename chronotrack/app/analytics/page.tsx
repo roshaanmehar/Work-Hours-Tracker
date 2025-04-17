@@ -1,303 +1,317 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import styles from "./page.module.css"
-import type { TimeEntry } from "@/lib/types"
-import { formatDuration } from "@/lib/utils"
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  addWeeks,
+  subWeeks,
+  startOfMonth,
+  endOfMonth,
+  eachMonthOfInterval,
+  subMonths,
+  addMonths,
+  startOfYear,
+  endOfYear,
+} from "date-fns"
+import { ArrowLeft, ArrowLeftCircle, ArrowRightCircle, Calendar, TrendingUp } from "lucide-react"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTimeStore } from "@/lib/store"
+import { calculateDuration, formatDuration, formatMoney } from "@/lib/utils"
 
 export default function AnalyticsPage() {
-  const [entries, setEntries] = useState<TimeEntry[]>([])
-  const [weeklyData, setWeeklyData] = useState<Array<{ day: string; hours: number; earnings: number }>>([])
-  const [monthlyData, setMonthlyData] = useState<Array<{ day: number; hours: number; earnings: number }>>([])
-  const [stats, setStats] = useState({
-    totalHours: 0,
-    weeklyHours: 0,
-    monthlyHours: 0,
-    averagePerDay: 0,
-    totalEarnings: 0,
-    regularHours: 0,
-    overtimeHours: 0,
-    regularEarnings: 0,
-    overtimeEarnings: 0,
-  })
-  const [activeTab, setActiveTab] = useState<"weekly" | "monthly">("weekly")
-
-  const HOURLY_RATE = 12.5
-  const WEEKLY_TARGET_HOURS = 20
+  const { shifts, loadData } = useTimeStore()
+  const [mounted, setMounted] = useState(false)
+  const [dateRange, setDateRange] = useState("week")
+  const [currentDate, setCurrentDate] = useState(new Date())
 
   useEffect(() => {
-    const storedEntries = localStorage.getItem("timeEntries")
-    if (storedEntries) {
-      const parsedEntries = JSON.parse(storedEntries) as TimeEntry[]
-      setEntries(parsedEntries)
+    loadData()
+    setMounted(true)
+  }, [loadData])
 
-      // Process data for charts and stats
-      processData(parsedEntries)
-    }
-  }, [])
-
-  const processData = (entries: TimeEntry[]) => {
-    const now = new Date()
-
-    // Weekly data
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    const dayOfWeek = now.getDay()
-
-    const weekData = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date()
-      d.setDate(d.getDate() - ((dayOfWeek - i + 7) % 7))
-      return {
-        date: d,
-        day: days[i],
-        hours: 0,
-        earnings: 0,
-      }
-    })
-
-    // Monthly data
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
-
-    const monthData = Array.from({ length: daysInMonth }, (_, i) => {
-      return {
-        date: new Date(currentYear, currentMonth, i + 1),
-        day: i + 1,
-        hours: 0,
-        earnings: 0,
-      }
-    })
-
-    // Calculate stats
-    let totalDuration = 0
-    let weeklyDuration = 0
-    let monthlyDuration = 0
-    const daysWithEntries = new Set()
-
-    // Start of week and month
-    const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
-    startOfWeek.setHours(0, 0, 0, 0)
-
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-
-    // Process entries
-    entries.forEach((entry) => {
-      const entryDate = new Date(entry.startTime)
-      const duration = entry.duration || 0
-      const hours = duration / 3600
-      const earnings = hours * HOURLY_RATE
-
-      // Total stats
-      totalDuration += duration
-      daysWithEntries.add(entryDate.toLocaleDateString())
-
-      // Weekly stats
-      if (entryDate >= startOfWeek) {
-        weeklyDuration += duration
-
-        const dayIndex = entryDate.getDay()
-        weekData[dayIndex].hours += hours
-        weekData[dayIndex].earnings += earnings
-      }
-
-      // Monthly stats
-      if (entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear) {
-        monthlyDuration += duration
-
-        const dayIndex = entryDate.getDate() - 1
-        monthData[dayIndex].hours += hours
-        monthData[dayIndex].earnings += earnings
-      }
-    })
-
-    // Calculate regular and overtime hours
-    const weeklyHours = weeklyDuration / 3600
-    const regularHours = Math.min(weeklyHours, WEEKLY_TARGET_HOURS)
-    const overtimeHours = Math.max(0, weeklyHours - WEEKLY_TARGET_HOURS)
-
-    // Calculate earnings
-    const regularEarnings = regularHours * HOURLY_RATE
-    const overtimeEarnings = overtimeHours * HOURLY_RATE * 1.5
-    const totalEarnings = regularEarnings + overtimeEarnings
-
-    // Set state
-    setWeeklyData(weekData)
-    setMonthlyData(monthData)
-    setStats({
-      totalHours: totalDuration / 3600,
-      weeklyHours: weeklyDuration / 3600,
-      monthlyHours: monthlyDuration / 3600,
-      averagePerDay: daysWithEntries.size > 0 ? totalDuration / daysWithEntries.size / 3600 : 0,
-      totalEarnings,
-      regularHours,
-      overtimeHours,
-      regularEarnings,
-      overtimeEarnings,
-    })
+  if (!mounted) {
+    return null
   }
 
-  const getMaxValue = () => {
-    if (activeTab === "weekly") {
-      return Math.max(...weeklyData.map((d) => d.hours)) + 1
+  // Get date range based on selected period
+  const getDateRange = () => {
+    if (dateRange === "week") {
+      return {
+        start: startOfWeek(currentDate, { weekStartsOn: 1 }),
+        end: endOfWeek(currentDate, { weekStartsOn: 1 }),
+      }
+    } else if (dateRange === "month") {
+      return {
+        start: startOfMonth(currentDate),
+        end: endOfMonth(currentDate),
+      }
     } else {
-      return Math.max(...monthlyData.map((d) => d.hours)) + 1
+      return {
+        start: startOfYear(currentDate),
+        end: endOfYear(currentDate),
+      }
+    }
+  }
+
+  const { start, end } = getDateRange()
+
+  // Navigate between periods
+  const handlePrevious = () => {
+    if (dateRange === "week") {
+      setCurrentDate(subWeeks(currentDate, 1))
+    } else if (dateRange === "month") {
+      setCurrentDate(subMonths(currentDate, 1))
+    } else {
+      setCurrentDate(new Date(currentDate.getFullYear() - 1, 0, 1))
+    }
+  }
+
+  const handleNext = () => {
+    if (dateRange === "week") {
+      setCurrentDate(addWeeks(currentDate, 1))
+    } else if (dateRange === "month") {
+      setCurrentDate(addMonths(currentDate, 1))
+    } else {
+      setCurrentDate(new Date(currentDate.getFullYear() + 1, 0, 1))
+    }
+  }
+
+  // Prepare data for charts
+  const prepareChartData = () => {
+    if (dateRange === "week") {
+      const days = eachDayOfInterval({ start, end })
+      return days.map((day) => {
+        const dayShifts = shifts.filter((shift) => {
+          const shiftDate = new Date(shift.startTime)
+          return (
+            shiftDate.getDate() === day.getDate() &&
+            shiftDate.getMonth() === day.getMonth() &&
+            shiftDate.getFullYear() === day.getFullYear()
+          )
+        })
+
+        const hours = dayShifts.reduce((acc, shift) => {
+          if (shift.endTime) {
+            return acc + calculateDuration(shift.startTime, shift.endTime)
+          }
+          return acc
+        }, 0)
+
+        return {
+          date: format(day, "EEE"),
+          hours,
+          earnings: hours * 12.5,
+        }
+      })
+    } else if (dateRange === "month") {
+      const days = eachDayOfInterval({ start, end })
+      return days.map((day) => {
+        const dayShifts = shifts.filter((shift) => {
+          const shiftDate = new Date(shift.startTime)
+          return (
+            shiftDate.getDate() === day.getDate() &&
+            shiftDate.getMonth() === day.getMonth() &&
+            shiftDate.getFullYear() === day.getFullYear()
+          )
+        })
+
+        const hours = dayShifts.reduce((acc, shift) => {
+          if (shift.endTime) {
+            return acc + calculateDuration(shift.startTime, shift.endTime)
+          }
+          return acc
+        }, 0)
+
+        return {
+          date: format(day, "d"),
+          hours,
+          earnings: hours * 12.5,
+        }
+      })
+    } else {
+      const months = eachMonthOfInterval({ start, end })
+      return months.map((month) => {
+        const monthStart = startOfMonth(month)
+        const monthEnd = endOfMonth(month)
+
+        const monthShifts = shifts.filter((shift) => {
+          const shiftDate = new Date(shift.startTime)
+          return shiftDate >= monthStart && shiftDate <= monthEnd
+        })
+
+        const hours = monthShifts.reduce((acc, shift) => {
+          if (shift.endTime) {
+            return acc + calculateDuration(shift.startTime, shift.endTime)
+          }
+          return acc
+        }, 0)
+
+        return {
+          date: format(month, "MMM"),
+          hours,
+          earnings: hours * 12.5,
+        }
+      })
+    }
+  }
+
+  const chartData = prepareChartData()
+
+  // Calculate totals
+  const totalHours = chartData.reduce((acc, item) => acc + item.hours, 0)
+  const totalEarnings = totalHours * 12.5
+  const averageHoursPerDay = totalHours / chartData.length || 0
+
+  // Calculate period label
+  const getPeriodLabel = () => {
+    if (dateRange === "week") {
+      return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`
+    } else if (dateRange === "month") {
+      return format(start, "MMMM yyyy")
+    } else {
+      return format(start, "yyyy")
     }
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.background}>
-        <div className={styles.grid}>
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div key={i} className={styles.gridCell} style={{ animationDelay: `${Math.random() * 5}s` }} />
-          ))}
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
+        <div className="container flex h-16 items-center">
+          <Link
+            href="/dashboard"
+            className="mr-4 flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
+              <TrendingUp className="h-4 w-4 text-white" />
+            </div>
+            <h1 className="text-xl font-bold">Analytics</h1>
+          </div>
         </div>
-      </div>
-
-      <header className={styles.header}>
-        <Link href="/" className={styles.backButton}>
-          ← Back
-        </Link>
-        <h1 className={styles.title}>Analytics</h1>
       </header>
-
-      <main className={styles.main}>
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{formatDuration(stats.weeklyHours * 3600)}</div>
-            <div className={styles.statLabel}>This Week</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>${stats.totalEarnings.toFixed(2)}</div>
-            <div className={styles.statLabel}>Earnings</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{formatDuration(stats.averagePerDay * 3600)}</div>
-            <div className={styles.statLabel}>Avg/Day</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{formatDuration(stats.monthlyHours * 3600)}</div>
-            <div className={styles.statLabel}>This Month</div>
-          </div>
-        </div>
-
-        <div className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <h2>Time Analysis</h2>
-            <div className={styles.tabs}>
-              <button
-                className={`${styles.tab} ${activeTab === "weekly" ? styles.activeTab : ""}`}
-                onClick={() => setActiveTab("weekly")}
-              >
-                Weekly
-              </button>
-              <button
-                className={`${styles.tab} ${activeTab === "monthly" ? styles.activeTab : ""}`}
-                onClick={() => setActiveTab("monthly")}
-              >
-                Monthly
-              </button>
+      <main className="container flex-1 py-8">
+        <Card>
+          <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div>
+              <CardTitle>Work Analytics</CardTitle>
+              <CardDescription>Visualize your work patterns and earnings</CardDescription>
             </div>
-          </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={handlePrevious}>
+                <ArrowLeftCircle className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                <Calendar className="h-4 w-4 text-slate-500" />
+                <span className="text-sm font-medium">{getPeriodLabel()}</span>
+              </div>
+              <Button variant="outline" size="icon" onClick={handleNext}>
+                <ArrowRightCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <Tabs defaultValue="week" value={dateRange} onValueChange={setDateRange} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="week">Week</TabsTrigger>
+                <TabsTrigger value="month">Month</TabsTrigger>
+                <TabsTrigger value="year">Year</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-          <div className={styles.chartContainer}>
-            {activeTab === "weekly" ? (
-              <div className={styles.chart}>
-                <div className={styles.chartYAxis}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className={styles.chartYLabel}>
-                      {Math.round((getMaxValue() / 5) * (4 - i))}h
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.chartBars}>
-                  {weeklyData.map((day, i) => (
-                    <div key={i} className={styles.chartBarGroup}>
-                      <div
-                        className={styles.chartBar}
-                        style={{
-                          height: `${(day.hours / getMaxValue()) * 100}%`,
-                          animationDelay: `${i * 0.1}s`,
-                        }}
-                      >
-                        <div className={styles.chartTooltip}>
-                          <div>{formatDuration(day.hours * 3600)}</div>
-                          <div>${day.earnings.toFixed(2)}</div>
-                        </div>
-                      </div>
-                      <div className={styles.chartXLabel}>{day.day.substring(0, 3)}</div>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500">Total Hours</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatDuration(totalHours)}</div>
+                  <p className="text-xs text-slate-500">Avg: {formatDuration(averageHoursPerDay)}/day</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500">Total Earnings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatMoney(totalEarnings)}</div>
+                  <p className="text-xs text-slate-500">Rate: £12.50/hour</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500">Productivity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{chartData.filter((d) => d.hours > 0).length} days</div>
+                  <p className="text-xs text-slate-500">
+                    {Math.round((chartData.filter((d) => d.hours > 0).length / chartData.length) * 100)}% of period
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="mb-4 text-lg font-medium">Hours Worked</h3>
+                <div className="h-[300px] w-full rounded-xl bg-white p-4 dark:bg-slate-900">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip
+                        formatter={(value) => [`${value.toFixed(2)} hours`, "Hours"]}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Bar dataKey="hours" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-            ) : (
-              <div className={styles.chart}>
-                <div className={styles.chartYAxis}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className={styles.chartYLabel}>
-                      {Math.round((getMaxValue() / 5) * (4 - i))}h
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.chartBars}>
-                  {monthlyData.map((day, i) => (
-                    <div key={i} className={styles.chartBarGroup}>
-                      <div
-                        className={styles.chartBar}
-                        style={{
-                          height: `${(day.hours / getMaxValue()) * 100}%`,
-                          animationDelay: `${i * 0.05}s`,
-                        }}
-                      >
-                        <div className={styles.chartTooltip}>
-                          <div>{formatDuration(day.hours * 3600)}</div>
-                          <div>${day.earnings.toFixed(2)}</div>
-                        </div>
-                      </div>
-                      {i % 5 === 0 && <div className={styles.chartXLabel}>{day.day}</div>}
-                    </div>
-                  ))}
+
+              <div>
+                <h3 className="mb-4 text-lg font-medium">Earnings</h3>
+                <div className="h-[300px] w-full rounded-xl bg-white p-4 dark:bg-slate-900">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip
+                        formatter={(value) => [`£${value.toFixed(2)}`, "Earnings"]}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.earningsCard}>
-          <h2>Weekly Earnings Breakdown</h2>
-          <div className={styles.earningsBreakdown}>
-            <div className={styles.earningsItem}>
-              <div className={styles.earningsLabel}>Regular Hours ({stats.regularHours.toFixed(1)}h)</div>
-              <div className={styles.earningsValue}>${stats.regularEarnings.toFixed(2)}</div>
             </div>
-            <div className={styles.earningsItem}>
-              <div className={styles.earningsLabel}>Overtime Hours ({stats.overtimeHours.toFixed(1)}h)</div>
-              <div className={styles.earningsValue}>${stats.overtimeEarnings.toFixed(2)}</div>
-            </div>
-            <div className={`${styles.earningsItem} ${styles.earningsTotal}`}>
-              <div className={styles.earningsLabel}>Total</div>
-              <div className={styles.earningsValue}>${stats.totalEarnings.toFixed(2)}</div>
-            </div>
-          </div>
-          <div className={styles.progressContainer}>
-            <div className={styles.progressLabel}>
-              <span>Weekly Target: {WEEKLY_TARGET_HOURS}h</span>
-              <span>{Math.round((stats.weeklyHours / WEEKLY_TARGET_HOURS) * 100)}%</span>
-            </div>
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressRegular}
-                style={{ width: `${Math.min((stats.regularHours / WEEKLY_TARGET_HOURS) * 100, 100)}%` }}
-              ></div>
-              <div
-                className={styles.progressOvertime}
-                style={{ width: `${Math.min((stats.weeklyHours / WEEKLY_TARGET_HOURS) * 100, 100)}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   )
