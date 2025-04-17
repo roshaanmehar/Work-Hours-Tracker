@@ -2,22 +2,28 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Clock, History, LineChart, Settings } from "lucide-react"
-
-import { TimeTracker } from "@/components/time-tracker"
-import { DashboardStats } from "@/components/dashboard-stats"
-import { RecentShifts } from "@/components/recent-shifts"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTimeStore } from "@/lib/store"
+import ThemeToggle from "@/components/theme-toggle"
+import TimeTracker from "@/components/time-tracker"
+import RecentShifts from "@/components/recent-shifts"
+import DashboardStats from "@/components/dashboard-stats"
 
 export default function Dashboard() {
   const { loadData } = useTimeStore()
   const [mounted, setMounted] = useState(false)
+  const [activeTab, setActiveTab] = useState("tracker")
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     loadData()
     setMounted(true)
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [loadData])
 
   if (!mounted) {
@@ -25,81 +31,76 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
-              <Clock className="h-4 w-4 text-white" />
-              <div className="absolute -inset-0.5 animate-pulse rounded-full bg-gradient-to-br from-purple-500 to-pink-500 opacity-50 blur-sm" />
+    <div className="page">
+      <header className={`header ${scrolled ? "scrolled" : ""}`}>
+        <div className="container header-content">
+          <Link href="/dashboard" className="logo">
+            <div className="logo-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
             </div>
-            <h1 className="text-xl font-bold">Hours Tracker Pro</h1>
-          </div>
-          <nav className="hidden md:block">
-            <ul className="flex items-center gap-6">
-              <li>
-                <Link href="/dashboard" className="flex items-center gap-1 font-medium text-slate-900 dark:text-white">
-                  <Clock className="h-4 w-4" />
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/history"
-                  className="flex items-center gap-1 font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                >
-                  <History className="h-4 w-4" />
-                  History
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/analytics"
-                  className="flex items-center gap-1 font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                >
-                  <LineChart className="h-4 w-4" />
-                  Analytics
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-1 font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                >
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </Link>
-              </li>
-            </ul>
+            <span className="logo-text">Tempus</span>
+          </Link>
+          <nav className="nav">
+            <Link href="/dashboard" className="nav-link active">
+              Dashboard
+            </Link>
+            <Link href="/history" className="nav-link">
+              History
+            </Link>
+            <Link href="/analytics" className="nav-link">
+              Analytics
+            </Link>
+            <Link href="/settings" className="nav-link">
+              Settings
+            </Link>
+            <ThemeToggle />
           </nav>
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Clock className="h-5 w-5" />
-            </Button>
-          </div>
         </div>
       </header>
-      <main className="container flex-1 py-8">
-        <Tabs defaultValue="tracker" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="tracker">Time Tracker</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
-            <TabsTrigger value="recent">Recent</TabsTrigger>
-          </TabsList>
-          <TabsContent value="tracker" className="space-y-4">
+      <main className="main">
+        <div className="container">
+          <div className="tabs">
+            <div className={`tab ${activeTab === "tracker" ? "active" : ""}`} onClick={() => setActiveTab("tracker")}>
+              Time Tracker
+            </div>
+            <div className={`tab ${activeTab === "stats" ? "active" : ""}`} onClick={() => setActiveTab("stats")}>
+              Stats
+            </div>
+            <div className={`tab ${activeTab === "recent" ? "active" : ""}`} onClick={() => setActiveTab("recent")}>
+              Recent
+            </div>
+          </div>
+
+          <div className={`tab-content ${activeTab === "tracker" ? "active" : ""}`}>
             <TimeTracker />
-          </TabsContent>
-          <TabsContent value="stats" className="space-y-4">
+          </div>
+
+          <div className={`tab-content ${activeTab === "stats" ? "active" : ""}`}>
             <DashboardStats />
-          </TabsContent>
-          <TabsContent value="recent" className="space-y-4">
+          </div>
+
+          <div className={`tab-content ${activeTab === "recent" ? "active" : ""}`}>
             <RecentShifts />
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </main>
-      <footer className="border-t bg-white py-6 dark:bg-slate-950">
-        <div className="container text-center text-sm text-slate-500 dark:text-slate-400">
-          &copy; {new Date().getFullYear()} Hours Tracker Pro. All rights reserved.
+      <footer className="footer">
+        <div className="container">
+          <div className="baroque-divider"></div>
+          <p>&copy; {new Date().getFullYear()} Tempus. All rights reserved.</p>
         </div>
       </footer>
     </div>
