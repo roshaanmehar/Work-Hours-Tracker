@@ -1,4 +1,4 @@
-// IndexedDB database implementation for reliable mobile storage
+// Simple IndexedDB database implementation for reliable mobile storage
 
 const DB_NAME = "TimeTrackerDB"
 const DB_VERSION = 1
@@ -11,14 +11,13 @@ interface TimeEntry {
   endTime: Date | null
   description: string
   project?: string
-  tags?: string[]
 }
 
 interface Settings {
   id: string
   hourlyRate: number
   overtimeRate: number
-  overtimeThreshold: number // in hours
+  overtimeThreshold: number
   currency: string
 }
 
