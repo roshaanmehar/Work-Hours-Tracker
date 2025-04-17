@@ -1,4 +1,4 @@
-// File: C:\Users\Roshaan Ali Mehar\Desktop\Work-Hours-Tracker\chronotrack\v1\app\layout.tsx
+// File: C:\Users\Roshaan Ali Mehar\Desktop\Work-Hours-Tracker\chronotrack\v2\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
