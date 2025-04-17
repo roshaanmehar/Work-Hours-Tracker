@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import {
   format,
@@ -17,36 +17,36 @@ import {
   startOfYear,
   endOfYear,
 } from "date-fns"
-import { ArrowLeft, ArrowLeftCircle, ArrowRightCircle, Calendar, TrendingUp } from "lucide-react"
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTimeStore } from "@/lib/store"
 import { calculateDuration, formatDuration, formatMoney } from "@/lib/utils"
+import ThemeToggle from "@/components/theme-toggle"
 
 export default function AnalyticsPage() {
   const { shifts, loadData } = useTimeStore()
   const [mounted, setMounted] = useState(false)
   const [dateRange, setDateRange] = useState("week")
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [scrolled, setScrolled] = useState(false)
+  const hoursChartRef = useRef(null)
+  const earningsChartRef = useRef(null)
 
   useEffect(() => {
     loadData()
     setMounted(true)
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [loadData])
+
+  useEffect(() => {
+    if (mounted && shifts.length > 0) {
+      renderCharts()
+    }
+  }, [mounted, shifts, dateRange, currentDate])
 
   if (!mounted) {
     return null
@@ -118,6 +118,7 @@ export default function AnalyticsPage() {
 
         return {
           date: format(day, "EEE"),
+          fullDate: format(day, "yyyy-MM-dd"),
           hours,
           earnings: hours * 12.5,
         }
@@ -143,6 +144,7 @@ export default function AnalyticsPage() {
 
         return {
           date: format(day, "d"),
+          fullDate: format(day, "yyyy-MM-dd"),
           hours,
           earnings: hours * 12.5,
         }
@@ -167,6 +169,7 @@ export default function AnalyticsPage() {
 
         return {
           date: format(month, "MMM"),
+          fullDate: format(month, "yyyy-MM"),
           hours,
           earnings: hours * 12.5,
         }
@@ -192,127 +195,242 @@ export default function AnalyticsPage() {
     }
   }
 
+  // Render charts using canvas
+  const renderCharts = () => {
+    if (!hoursChartRef.current || !earningsChartRef.current) return
+
+    const hoursCanvas = hoursChartRef.current
+    const earningsCanvas = earningsChartRef.current
+    const hoursCtx = hoursCanvas.getContext("2d")
+    const earningsCtx = earningsCanvas.getContext("2d")
+
+    // Clear canvases
+    hoursCtx.clearRect(0, 0, hoursCanvas.width, hoursCanvas.height)
+    earningsCtx.clearRect(0, 0, earningsCanvas.width, earningsCanvas.height)
+
+    // Set canvas dimensions
+    const canvasWidth = hoursCanvas.width
+    const canvasHeight = hoursCanvas.height
+    const padding = 40
+    const chartWidth = canvasWidth - padding * 2
+    const chartHeight = canvasHeight - padding * 2
+
+    // Find max values
+    const maxHours = Math.max(...chartData.map((d) => d.hours), 8) // At least 8 hours for scale
+    const maxEarnings = Math.max(...chartData.map((d) => d.earnings), 100) // At least £100 for scale
+
+    // Draw hours chart
+    hoursCtx.fillStyle = "#f8f5f0"
+    hoursCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+    // Draw axes
+    hoursCtx.strokeStyle = "#d0c8b0"
+    hoursCtx.lineWidth = 1
+    hoursCtx.beginPath()
+    hoursCtx.moveTo(padding, padding)
+    hoursCtx.lineTo(padding, canvasHeight - padding)
+    hoursCtx.lineTo(canvasWidth - padding, canvasHeight - padding)
+    hoursCtx.stroke()
+
+    // Draw bars
+    const barWidth = chartWidth / chartData.length - 10
+
+    chartData.forEach((item, index) => {
+      const x = padding + index * (chartWidth / chartData.length) + (chartWidth / chartData.length - barWidth) / 2
+      const barHeight = (item.hours / maxHours) * chartHeight
+      const y = canvasHeight - padding - barHeight
+
+      // Create gradient
+      const gradient = hoursCtx.createLinearGradient(x, y, x, canvasHeight - padding)
+      gradient.addColorStop(0, "#8b0000")
+      gradient.addColorStop(1, "#d4af37")
+
+      hoursCtx.fillStyle = gradient
+      hoursCtx.fillRect(x, y, barWidth, barHeight)
+
+      // Add labels
+      hoursCtx.fillStyle = "#1a1814"
+      hoursCtx.font = "12px var(--font-sans)"
+      hoursCtx.textAlign = "center"
+      hoursCtx.fillText(item.date, x + barWidth / 2, canvasHeight - padding + 20)
+
+      if (item.hours > 0) {
+        hoursCtx.fillText(item.hours.toFixed(1), x + barWidth / 2, y - 10)
+      }
+    })
+
+    // Draw title
+    hoursCtx.fillStyle = "#1a1814"
+    hoursCtx.font = "16px var(--font-serif)"
+    hoursCtx.textAlign = "center"
+    hoursCtx.fillText("Hours Worked", canvasWidth / 2, 20)
+
+    // Draw earnings chart (line chart)
+    earningsCtx.fillStyle = "#f8f5f0"
+    earningsCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+    // Draw axes
+    earningsCtx.strokeStyle = "#d0c8b0"
+    earningsCtx.lineWidth = 1
+    earningsCtx.beginPath()
+    earningsCtx.moveTo(padding, padding)
+    earningsCtx.lineTo(padding, canvasHeight - padding)
+    earningsCtx.lineTo(canvasWidth - padding, canvasHeight - padding)
+    earningsCtx.stroke()
+
+    // Draw line
+    earningsCtx.strokeStyle = "#d4af37"
+    earningsCtx.lineWidth = 2
+    earningsCtx.beginPath()
+
+    chartData.forEach((item, index) => {
+      const x = padding + index * (chartWidth / chartData.length) + chartWidth / chartData.length / 2
+      const y = canvasHeight - padding - (item.earnings / maxEarnings) * chartHeight
+
+      if (index === 0) {
+        earningsCtx.moveTo(x, y)
+      } else {
+        earningsCtx.lineTo(x, y)
+      }
+
+      // Add data points
+      earningsCtx.fillStyle = "#8b0000"
+      earningsCtx.beginPath()
+      earningsCtx.arc(x, y, 4, 0, Math.PI * 2)
+      earningsCtx.fill()
+
+      // Add labels
+      earningsCtx.fillStyle = "#1a1814"
+      earningsCtx.font = "12px var(--font-sans)"
+      earningsCtx.textAlign = "center"
+      earningsCtx.fillText(item.date, x, canvasHeight - padding + 20)
+
+      if (item.earnings > 0) {
+        earningsCtx.fillText(`£${item.earnings.toFixed(2)}`, x, y - 10)
+      }
+    })
+
+    earningsCtx.stroke()
+
+    // Draw title
+    earningsCtx.fillStyle = "#1a1814"
+    earningsCtx.font = "16px var(--font-serif)"
+    earningsCtx.textAlign = "center"
+    earningsCtx.fillText("Earnings", canvasWidth / 2, 20)
+  }
+
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
-        <div className="container flex h-16 items-center">
-          <Link
-            href="/dashboard"
-            className="mr-4 flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
-              <TrendingUp className="h-4 w-4 text-white" />
+    <div className="page">
+      <header className={`header ${scrolled ? "scrolled" : ""}`}>
+        <div className="container header-content">
+          <Link href="/dashboard" className="logo">
+            <div className="logo-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
             </div>
-            <h1 className="text-xl font-bold">Analytics</h1>
-          </div>
+            <span className="logo-text">Tempus</span>
+          </Link>
+          <nav className="nav">
+            <Link href="/dashboard" className="nav-link">
+              Dashboard
+            </Link>
+            <Link href="/history" className="nav-link">
+              History
+            </Link>
+            <Link href="/analytics" className="nav-link active">
+              Analytics
+            </Link>
+            <Link href="/settings" className="nav-link">
+              Settings
+            </Link>
+            <ThemeToggle />
+          </nav>
         </div>
       </header>
-      <main className="container flex-1 py-8">
-        <Card>
-          <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div>
-              <CardTitle>Work Analytics</CardTitle>
-              <CardDescription>Visualize your work patterns and earnings</CardDescription>
+      <main className="main">
+        <div className="container">
+          <div className="card baroque-border">
+            <div className="ornament ornament-1"></div>
+            <div className="ornament ornament-2"></div>
+            <div className="card-header">
+              <h2 className="card-title">Work Analytics</h2>
+              <p className="card-description">Visualize your work patterns and earnings</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={handlePrevious}>
-                <ArrowLeftCircle className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 rounded-md border px-3 py-2">
-                <Calendar className="h-4 w-4 text-slate-500" />
-                <span className="text-sm font-medium">{getPeriodLabel()}</span>
-              </div>
-              <Button variant="outline" size="icon" onClick={handleNext}>
-                <ArrowRightCircle className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <Tabs defaultValue="week" value={dateRange} onValueChange={setDateRange} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="week">Week</TabsTrigger>
-                <TabsTrigger value="month">Month</TabsTrigger>
-                <TabsTrigger value="year">Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-500">Total Hours</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatDuration(totalHours)}</div>
-                  <p className="text-xs text-slate-500">Avg: {formatDuration(averageHoursPerDay)}/day</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-500">Total Earnings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatMoney(totalEarnings)}</div>
-                  <p className="text-xs text-slate-500">Rate: £12.50/hour</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-500">Productivity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{chartData.filter((d) => d.hours > 0).length} days</div>
-                  <p className="text-xs text-slate-500">
-                    {Math.round((chartData.filter((d) => d.hours > 0).length / chartData.length) * 100)}% of period
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="mb-4 text-lg font-medium">Hours Worked</h3>
-                <div className="h-[300px] w-full rounded-xl bg-white p-4 dark:bg-slate-900">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(value) => [`${value.toFixed(2)} hours`, "Hours"]}
-                        labelFormatter={(label) => `Date: ${label}`}
-                      />
-                      <Bar dataKey="hours" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+            <div className="card-content">
+              <div className="tabs">
+                <div className={`tab ${dateRange === "week" ? "active" : ""}`} onClick={() => setDateRange("week")}>
+                  Week
+                </div>
+                <div className={`tab ${dateRange === "month" ? "active" : ""}`} onClick={() => setDateRange("month")}>
+                  Month
+                </div>
+                <div className={`tab ${dateRange === "year" ? "active" : ""}`} onClick={() => setDateRange("year")}>
+                  Year
                 </div>
               </div>
 
-              <div>
-                <h3 className="mb-4 text-lg font-medium">Earnings</h3>
-                <div className="h-[300px] w-full rounded-xl bg-white p-4 dark:bg-slate-900">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(value) => [`£${value.toFixed(2)}`, "Earnings"]}
-                        labelFormatter={(label) => `Date: ${label}`}
-                      />
-                      <Legend />
-                      <Line type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "1rem",
+                  margin: "1rem 0",
+                }}
+              >
+                <button className="button button-secondary" onClick={handlePrevious}>
+                  Previous
+                </button>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem" }}>{getPeriodLabel()}</div>
+                <button className="button button-secondary" onClick={handleNext}>
+                  Next
+                </button>
+              </div>
+
+              <div className="stats-grid" style={{ marginBottom: "2rem" }}>
+                <div className="stat-card">
+                  <div className="stat-label">Total Hours</div>
+                  <div className="stat-value">{formatDuration(totalHours)}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Total Earnings</div>
+                  <div className="stat-value">{formatMoney(totalEarnings)}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Average Hours</div>
+                  <div className="stat-value">{formatDuration(averageHoursPerDay)}</div>
                 </div>
               </div>
+
+              <div className="chart-container">
+                <canvas ref={hoursChartRef} width="800" height="300"></canvas>
+              </div>
+
+              <div className="chart-container">
+                <canvas ref={earningsChartRef} width="800" height="300"></canvas>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
+      <footer className="footer">
+        <div className="container">
+          <div className="baroque-divider"></div>
+          <p>&copy; {new Date().getFullYear()} Tempus. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   )
 }
