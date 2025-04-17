@@ -329,6 +329,46 @@
   transition: width 0.5s ease;
 }
 
+.dataManagement {
+  margin-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.syncStatus {
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+  min-height: 1.2rem;
+}
+
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.actionButton {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.fileInput {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 1rem;
