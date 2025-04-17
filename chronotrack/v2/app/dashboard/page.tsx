@@ -51,7 +51,7 @@ export default function Dashboard() {
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
-            <span className="logo-text">Tempus</span>
+            <span className="logo-text">Infernal Chronos</span>
           </Link>
           <nav className="nav">
             <Link href="/dashboard" className="nav-link active">
@@ -72,35 +72,63 @@ export default function Dashboard() {
       </header>
       <main className="main">
         <div className="container">
-          <div className="tabs">
-            <div className={`tab ${activeTab === "tracker" ? "active" : ""}`} onClick={() => setActiveTab("tracker")}>
-              Time Tracker
+          <div className="lucifer-frame">
+            <div className="tabs">
+              <div className={`tab ${activeTab === "tracker" ? "active" : ""}`} onClick={() => setActiveTab("tracker")}>
+                <span className="flourish flourish-1"></span>
+                Time Tracker
+                <span className="flourish flourish-2"></span>
+              </div>
+              <div className={`tab ${activeTab === "stats" ? "active" : ""}`} onClick={() => setActiveTab("stats")}>
+                <span className="flourish flourish-1"></span>
+                Stats
+                <span className="flourish flourish-2"></span>
+              </div>
+              <div className={`tab ${activeTab === "recent" ? "active" : ""}`} onClick={() => setActiveTab("recent")}>
+                <span className="flourish flourish-1"></span>
+                Recent
+                <span className="flourish flourish-2"></span>
+              </div>
             </div>
-            <div className={`tab ${activeTab === "stats" ? "active" : ""}`} onClick={() => setActiveTab("stats")}>
-              Stats
+
+            <div className={`tab-content ${activeTab === "tracker" ? "active" : ""}`}>
+              <TimeTracker />
+              <div className="hidden-message hidden-message-1">Time is the devil's playground</div>
             </div>
-            <div className={`tab ${activeTab === "recent" ? "active" : ""}`} onClick={() => setActiveTab("recent")}>
-              Recent
+
+            <div className={`tab-content ${activeTab === "stats" ? "active" : ""}`}>
+              <DashboardStats />
+              <div className="hidden-message hidden-message-2">Numbers never lie, but they do deceive</div>
             </div>
-          </div>
 
-          <div className={`tab-content ${activeTab === "tracker" ? "active" : ""}`}>
-            <TimeTracker />
-          </div>
-
-          <div className={`tab-content ${activeTab === "stats" ? "active" : ""}`}>
-            <DashboardStats />
-          </div>
-
-          <div className={`tab-content ${activeTab === "recent" ? "active" : ""}`}>
-            <RecentShifts />
+            <div className={`tab-content ${activeTab === "recent" ? "active" : ""}`}>
+              <RecentShifts />
+              <div className="hidden-message hidden-message-1">The past is written in blood</div>
+            </div>
           </div>
         </div>
       </main>
       <footer className="footer">
         <div className="container">
-          <div className="baroque-divider"></div>
-          <p>&copy; {new Date().getFullYear()} Tempus. All rights reserved.</p>
+          <div className="infernal-divider"></div>
+          <div className="infernal-medallion">
+            <div className="medallion-content">IC</div>
+          </div>
+          <p>&copy; {new Date().getFullYear()} Infernal Chronos. All rights reserved.</p>
+          <div className="piano-keys">
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+            <div className="piano-key black"></div>
+            <div className="piano-key"></div>
+          </div>
         </div>
       </footer>
     </div>
