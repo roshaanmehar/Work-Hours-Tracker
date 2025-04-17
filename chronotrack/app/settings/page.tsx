@@ -1,242 +1,170 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { saveSettings, getSettings, initDB } from "@/components/database"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { ArrowLeft, Clock, Save, Trash2 } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { useTimeStore } from "@/lib/store"
+import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
-  const [hourlyRate, setHourlyRate] = useState(0)
-  const [overtimeRate, setOvertimeRate] = useState(0)
-  const [overtimeThreshold, setOvertimeThreshold] = useState(8)
-  const [currency, setCurrency] = useState("$")
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [message, setMessage] = useState("")
+  const { clearAllData, loadData } = useTimeStore()
+  const { toast } = useToast()
+  const [mounted, setMounted] = useState(false)
+  const [hourlyRate, setHourlyRate] = useState("12.50")
+  const [darkMode, setDarkMode] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
-  // Google Sheets settings
-  const [spreadsheetId, setSpreadsheetId] = useState("")
-  const [apiKey, setApiKey] = useState("")
-
-  // Load settings on component mount
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        await initDB()
-        const settings = await getSettings()
+    loadData()
+    setMounted(true)
 
-        if (settings) {
-          setHourlyRate(settings.hourlyRate || 0)
-          setOvertimeRate(settings.overtimeRate || 0)
-          setOvertimeThreshold(settings.overtimeThreshold || 8)
-          setCurrency(settings.currency || "$")
-        }
+    // Check if dark mode is enabled
+    const isDarkMode = document.documentElement.classList.contains("dark")
+    setDarkMode(isDarkMode)
 
-        // Load Google Sheets settings from localStorage
-        const savedSpreadsheetId = localStorage.getItem("gs_spreadsheetId")
-        const savedApiKey = localStorage.getItem("gs_apiKey")
-
-        if (savedSpreadsheetId) setSpreadsheetId(savedSpreadsheetId)
-        if (savedApiKey) setApiKey(savedApiKey)
-
-        setIsLoading(false)
-      } catch (error) {
-        console.error("Error loading settings:", error)
-        setMessage("Error loading settings. Please try again.")
-        setIsLoading(false)
-      }
+    // Get hourly rate from local storage
+    const storedRate = localStorage.getItem("hourlyRate")
+    if (storedRate) {
+      setHourlyRate(storedRate)
     }
+  }, [loadData])
 
-    loadSettings()
-  }, [])
+  if (!mounted) {
+    return null
+  }
 
-  // Save settings
-  const handleSaveSettings = async () => {
-    try {
-      setIsSaving(true)
+  const handleSaveSettings = () => {
+    // Save hourly rate to local storage
+    localStorage.setItem("hourlyRate", hourlyRate)
 
-      await saveSettings({
-        id: "user-settings",
-        hourlyRate,
-        overtimeRate,
-        overtimeThreshold,
-        currency,
-      })
+    toast({
+      title: "Settings saved",
+      description: "Your settings have been saved successfully.",
+    })
+  }
 
-      // Save Google Sheets settings to localStorage
-      localStorage.setItem("gs_spreadsheetId", spreadsheetId)
-      localStorage.setItem("gs_apiKey", apiKey)
+  const handleToggleDarkMode = () => {
+    const newDarkMode = !darkMode
+    setDarkMode(newDarkMode)
 
-      setMessage("Settings saved successfully!")
-
-      // Clear message after 3 seconds
-      setTimeout(() => {
-        setMessage("")
-      }, 3000)
-    } catch (error) {
-      console.error("Error saving settings:", error)
-      setMessage("Error saving settings. Please try again.")
-    } finally {
-      setIsSaving(false)
+    if (newDarkMode) {
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="settings-page">
-        <h1>Settings</h1>
-        <p>Loading settings...</p>
-      </div>
-    )
+  const handleClearData = () => {
+    clearAllData()
+    setShowConfirmation(false)
+
+    toast({
+      title: "Data cleared",
+      description: "All your time tracking data has been deleted.",
+      variant: "destructive",
+    })
   }
 
   return (
-    <div className="settings-page">
-      <h1>Settings</h1>
-
-      <div className="settings-section">
-        <h2>Pay Settings</h2>
-
-        <div className="form-group">
-          <label htmlFor="currency">Currency Symbol:</label>
-          <input
-            id="currency"
-            type="text"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            maxLength={3}
-          />
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
+        <div className="container flex h-16 items-center">
+          <Link
+            href="/dashboard"
+            className="mr-4 flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
+              <Clock className="h-4 w-4 text-white" />
+            </div>
+            <h1 className="text-xl font-bold">Settings</h1>
+          </div>
         </div>
+      </header>
+      <main className="container flex-1 py-8">
+        <div className="mx-auto max-w-2xl space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>App Settings</CardTitle>
+              <CardDescription>Manage your app preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="hourlyRate">Hourly Rate (£)</Label>
+                  <Input
+                    id="hourlyRate"
+                    type="number"
+                    step="0.01"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                  />
+                  <p className="mt-1 text-sm text-slate-500">This rate will be used to calculate your earnings</p>
+                </div>
 
-        <div className="form-group">
-          <label htmlFor="hourlyRate">Hourly Rate:</label>
-          <input
-            id="hourlyRate"
-            type="number"
-            value={hourlyRate}
-            onChange={(e) => setHourlyRate(Number.parseFloat(e.target.value) || 0)}
-            min="0"
-            step="0.01"
-          />
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="darkMode">Dark Mode</Label>
+                    <p className="text-sm text-slate-500">Toggle between light and dark theme</p>
+                  </div>
+                  <Switch id="darkMode" checked={darkMode} onCheckedChange={handleToggleDarkMode} />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleSaveSettings} className="w-full">
+                <Save className="mr-2 h-4 w-4" />
+                Save Settings
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>Manage your time tracking data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <p className="text-sm text-slate-500">
+                  Clear all your time tracking data. This action cannot be undone.
+                </p>
+                {showConfirmation ? (
+                  <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-400">
+                      Are you sure you want to delete all your data?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button variant="destructive" size="sm" onClick={handleClearData}>
+                        Yes, delete everything
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setShowConfirmation(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="destructive" onClick={() => setShowConfirmation(true)}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Clear All Data
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <div className="form-group">
-          <label htmlFor="overtimeRate">Overtime Rate:</label>
-          <input
-            id="overtimeRate"
-            type="number"
-            value={overtimeRate}
-            onChange={(e) => setOvertimeRate(Number.parseFloat(e.target.value) || 0)}
-            min="0"
-            step="0.01"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="overtimeThreshold">Overtime Threshold (hours):</label>
-          <input
-            id="overtimeThreshold"
-            type="number"
-            value={overtimeThreshold}
-            onChange={(e) => setOvertimeThreshold(Number.parseFloat(e.target.value) || 0)}
-            min="0"
-            step="0.5"
-          />
-        </div>
-      </div>
-
-      <div className="settings-section">
-        <h2>Google Sheets Integration</h2>
-        <p>Enter your Google Sheets information to enable syncing.</p>
-
-        <div className="form-group">
-          <label htmlFor="spreadsheetId">Spreadsheet ID:</label>
-          <input
-            id="spreadsheetId"
-            type="text"
-            value={spreadsheetId}
-            onChange={(e) => setSpreadsheetId(e.target.value)}
-            placeholder="Enter your Google Spreadsheet ID"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="apiKey">API Key:</label>
-          <input
-            id="apiKey"
-            type="text"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your Google API Key"
-          />
-        </div>
-      </div>
-
-      <button className="save-button" onClick={handleSaveSettings} disabled={isSaving}>
-        {isSaving ? "Saving..." : "Save Settings"}
-      </button>
-
-      {message && <div className="message">{message}</div>}
-
-      <style jsx>{`
-        .settings-page {
-          padding: 20px;
-        }
-        
-        h1 {
-          margin-bottom: 20px;
-          border-bottom: 1px solid black;
-          padding-bottom: 10px;
-        }
-        
-        .settings-section {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid black;
-          background: white;
-        }
-        
-        h2 {
-          margin-top: 0;
-          margin-bottom: 20px;
-          border-bottom: 1px solid black;
-          padding-bottom: 10px;
-        }
-        
-        .form-group {
-          margin-bottom: 15px;
-        }
-        
-        label {
-          display: block;
-          margin-bottom: 5px;
-          font-weight: bold;
-        }
-        
-        input {
-          width: 100%;
-          padding: 8px;
-          border: 1px solid black;
-          background: white;
-        }
-        
-        .save-button {
-          background: black;
-          color: white;
-          border: none;
-          padding: 10px 15px;
-          cursor: pointer;
-        }
-        
-        .save-button:disabled {
-          background: #666;
-          cursor: not-allowed;
-        }
-        
-        .message {
-          margin-top: 15px;
-          padding: 10px;
-          border: 1px solid black;
-        }
-      `}</style>
+      </main>
     </div>
   )
 }
