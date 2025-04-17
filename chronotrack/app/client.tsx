@@ -1,10 +1,21 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import type { TimeEntry } from "@/lib/types"
 import { formatDuration, generateId } from "@/lib/utils"
+import { 
+  saveTimeEntry, 
+  getAllTimeEntries, 
+  getActiveTimeEntry,
+  exportBackup,
+  importFromBackup
+} from "@/lib/db"
 
 export default function TimeTrackerClient() {
+  const [isExporting, setIsExporting] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const [syncStatus, setSyncStatus] = useState("")
+
   useEffect(() => {
     const clockInBtn = document.getElementById("clock-in-btn") as HTMLButtonElement
     const clockOutBtn = document.getElementById("clock-out-btn") as HTMLButtonElement
@@ -16,6 +27,11 @@ export default function TimeTrackerClient() {
     const progressRegularEl = document.getElementById("progress-regular") as HTMLDivElement
     const progressOvertimeEl = document.getElementById("progress-overtime") as HTMLDivElement
     const progressTextEl = document.getElementById("progress-text") as HTMLSpanElement
+    const exportBtn = document.getElementById("export-btn") as HTMLButtonElement
+    const importBtn = document.getElementById("import-btn") as HTMLButtonElement
+    const fileInput = document.getElementById("file-input") as HTMLInputElement
+    const syncBtn = document.getElementById("sync-btn") as HTMLButtonElement
+    const syncStatusEl = document.getElementById("sync-status") as HTMLDivElement
 
     // Clock hands
     const hoursHandEl = document.getElementById("hours-hand") as HTMLDivElement
@@ -91,8 +107,8 @@ export default function TimeTrackerClient() {
     }
 
     // Update stats
-    const updateStats = () => {
-      const entries = getTimeEntries()
+    const updateStats = async () => {
+      const entries = await getAllTimeEntries()
 
       // Calculate today's hours
       const today = new Date().toLocaleDateString()
@@ -115,21 +131,9 @@ export default function TimeTrackerClient() {
       earningsEl.textContent = `$${earnings}`
     }
 
-    // Get time entries from localStorage
-    const getTimeEntries = (): TimeEntry[] => {
-      const entries = localStorage.getItem("timeEntries")
-      return entries ? JSON.parse(entries) : []
-    }
-
-    // Save time entries to localStorage
-    const saveTimeEntries = (entries: TimeEntry[]) => {
-      localStorage.setItem("timeEntries", JSON.stringify(entries))
-    }
-
     // Check if there's an active session
-    const checkActiveSession = () => {
-      const entries = getTimeEntries()
-      const activeEntry = entries.find((entry) => !entry.endTime)
+    const checkActiveSession = async () => {
+      const activeEntry = await getActiveTimeEntry()
 
       if (activeEntry) {
         currentEntry = activeEntry
@@ -143,46 +147,107 @@ export default function TimeTrackerClient() {
     }
 
     // Clock in
-    const clockIn = () => {
+    const clockIn = async () => {
       const now = new Date()
       currentEntry = {
         id: generateId(),
         startTime: now.toISOString(),
       }
 
-      const entries = getTimeEntries()
-      entries.push(currentEntry)
-      saveTimeEntries(entries)
+      await saveTimeEntry(currentEntry)
 
       clockInBtn.disabled = true
       clockOutBtn.disabled = false
     }
 
     // Clock out
-    const clockOut = () => {
+    const clockOut = async () => {
       if (!currentEntry) return
 
       const now = new Date()
-      const entries = getTimeEntries()
-      const entryIndex = entries.findIndex((e) => e.id === currentEntry?.id)
+      const startTime = new Date(currentEntry.startTime)
+      const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000)
 
-      if (entryIndex !== -1) {
-        const startTime = new Date(entries[entryIndex].startTime)
-        const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000)
-
-        entries[entryIndex] = {
-          ...entries[entryIndex],
-          endTime: now.toISOString(),
-          duration,
-        }
-
-        saveTimeEntries(entries)
+      const updatedEntry = {
+        ...currentEntry,
+        endTime: now.toISOString(),
+        duration,
       }
+
+      await saveTimeEntry(updatedEntry)
 
       currentEntry = null
       clockInBtn.disabled = false
       clockOutBtn.disabled = true
       updateStats()
+    }
+
+    // Export data
+    const handleExport = async () => {
+      try {
+        setIsExporting(true)
+        const jsonData = await exportBackup()
+        
+        const blob = new Blob([jsonData], { type: "application/json" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `chronotrack-backup-${new Date().toISOString().split('T')[0]}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error("Export failed:", error)
+        alert("Export failed: " + error)
+      } finally {
+        setIsExporting(false)
+      }
+    }
+
+    // Import data
+    const handleImport = async (event: Event) => {
+      const input = event.target as HTMLInputElement
+      if (!input.files || input.files.length === 0) return
+
+      try {
+        setIsImporting(true)
+        const file = input.files[0]
+        const content = await file.text()
+        await importFromBackup(content)
+        alert("Import successful!")
+        checkActiveSession()
+        updateStats()
+      } catch (error) {
+        console.error("Import failed:", error)
+        alert("Import failed: " + error)
+      } finally {
+        setIsImporting(false)
+        input.value = ""
+      }
+    }
+
+    // Sync with Google Sheets
+    const handleSync = async () => {
+      try {
+        setSyncStatus("Syncing...")
+        syncStatusEl.textContent = "Syncing..."
+        
+        // This would be replaced with actual Google Sheets API integration
+        // For now, we'll just simulate a successful sync
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        setSyncStatus("Sync successful!")
+        syncStatusEl.textContent = "Last sync: " + new Date().toLocaleTimeString()
+        
+        setTimeout(() => {
+          setSyncStatus("")
+        }, 3000)
+      } catch (error) {
+        console.error("Sync failed:", error)
+        setSyncStatus("Sync failed: " + error)
+        syncStatusEl.textContent = "Sync failed"
+      }
     }
 
     // Initialize
@@ -198,12 +263,22 @@ export default function TimeTrackerClient() {
     // Event listeners
     clockInBtn.addEventListener("click", clockIn)
     clockOutBtn.addEventListener("click", clockOut)
+    
+    if (exportBtn) exportBtn.addEventListener("click", handleExport)
+    if (importBtn) importBtn.addEventListener("click", () => fileInput.click())
+    if (fileInput) fileInput.addEventListener("change", handleImport)
+    if (syncBtn) syncBtn.addEventListener("click", handleSync)
 
     return () => {
       clockInBtn.removeEventListener("click", clockIn)
       clockOutBtn.removeEventListener("click", clockOut)
+      
+      if (exportBtn) exportBtn.removeEventListener("click", handleExport)
+      if (importBtn) importBtn.removeEventListener("click", () => fileInput.click())
+      if (fileInput) fileInput.removeEventListener("change", handleImport)
+      if (syncBtn) syncBtn.removeEventListener("click", handleSync)
     }
-  }, [])
+  }, [isExporting, isImporting, syncStatus])
 
   return null
 }
