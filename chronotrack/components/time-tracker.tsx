@@ -1,16 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { format } from "date-fns"
-import { Clock, Pause, Play, StopCircle } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { useTimeStore } from "@/lib/store"
 import { formatDuration, formatMoney } from "@/lib/utils"
 
-export function TimeTracker() {
+export default function TimeTracker() {
   const { addShift, updateShift, shifts, loadData } = useTimeStore()
   const [isTracking, setIsTracking] = useState(false)
   const [currentShiftId, setCurrentShiftId] = useState<string | null>(null)
@@ -18,6 +13,10 @@ export function TimeTracker() {
   const [earnings, setEarnings] = useState(0)
   const [startTime, setStartTime] = useState<Date | null>(null)
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null)
+
+  const hourHandRef = useRef<HTMLDivElement>(null)
+  const minuteHandRef = useRef<HTMLDivElement>(null)
+  const secondHandRef = useRef<HTMLDivElement>(null)
 
   // Check if there's an active shift
   useEffect(() => {
@@ -45,6 +44,38 @@ export function TimeTracker() {
       if (timerInterval) clearInterval(timerInterval)
     }
   }, [loadData, shifts])
+
+  // Update clock hands
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date()
+      const hours = now.getHours() % 12
+      const minutes = now.getMinutes()
+      const seconds = now.getSeconds()
+
+      const hourDegrees = hours * 30 + minutes * 0.5
+      const minuteDegrees = minutes * 6
+      const secondDegrees = seconds * 6
+
+      if (hourHandRef.current) {
+        hourHandRef.current.style.transform = `rotate(${hourDegrees}deg)`
+      }
+
+      if (minuteHandRef.current) {
+        minuteHandRef.current.style.transform = `rotate(${minuteDegrees}deg)`
+      }
+
+      if (secondHandRef.current) {
+        secondHandRef.current.style.transform = `rotate(${secondDegrees}deg)`
+      }
+    }
+
+    updateClock() // Initial update
+
+    const clockInterval = setInterval(updateClock, 1000)
+
+    return () => clearInterval(clockInterval)
+  }, [])
 
   const handleStartTracking = () => {
     const now = new Date()
@@ -90,62 +121,96 @@ export function TimeTracker() {
     setTimerInterval(null)
   }
 
-  const handlePauseTracking = () => {
-    // This would be implemented in a real app
-    // For now, we'll just stop tracking
-    handleStopTracking()
-  }
-
   return (
-    <Card className="overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 opacity-50" />
-      <CardHeader className="relative">
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Clock className="h-6 w-6 text-purple-500" />
-          Time Tracker
-        </CardTitle>
-        <CardDescription>Track your working hours and earnings</CardDescription>
-      </CardHeader>
-      <CardContent className="relative space-y-8">
-        <div className="flex flex-col items-center justify-center space-y-2 rounded-lg bg-white/50 p-6 text-center backdrop-blur-sm dark:bg-slate-900/50">
-          <div className="text-4xl font-bold tabular-nums tracking-tight sm:text-5xl">
-            {formatDuration(elapsedTime)}
+    <div className="card baroque-border">
+      <div className="ornament ornament-1"></div>
+      <div className="ornament ornament-2"></div>
+      <div className="card-header">
+        <h2 className="card-title">Time Tracker</h2>
+        <p className="card-description">Track your working hours and earnings</p>
+      </div>
+      <div className="card-content" style={{ textAlign: "center" }}>
+        <div className="baroque-clock">
+          <div className="clock-face">
+            <div className="clock-numbers">
+              <div className="clock-number clock-number-1">
+                <span>1</span>
+              </div>
+              <div className="clock-number clock-number-2">
+                <span>2</span>
+              </div>
+              <div className="clock-number clock-number-3">
+                <span>3</span>
+              </div>
+              <div className="clock-number clock-number-4">
+                <span>4</span>
+              </div>
+              <div className="clock-number clock-number-5">
+                <span>5</span>
+              </div>
+              <div className="clock-number clock-number-6">
+                <span>6</span>
+              </div>
+              <div className="clock-number clock-number-7">
+                <span>7</span>
+              </div>
+              <div className="clock-number clock-number-8">
+                <span>8</span>
+              </div>
+              <div className="clock-number clock-number-9">
+                <span>9</span>
+              </div>
+              <div className="clock-number clock-number-10">
+                <span>10</span>
+              </div>
+              <div className="clock-number clock-number-11">
+                <span>11</span>
+              </div>
+              <div className="clock-number clock-number-12">
+                <span>12</span>
+              </div>
+            </div>
+            <div ref={hourHandRef} className="clock-hand clock-hand-hour"></div>
+            <div ref={minuteHandRef} className="clock-hand clock-hand-minute"></div>
+            <div ref={secondHandRef} className="clock-hand clock-hand-second"></div>
+            <div className="clock-center"></div>
           </div>
-          <div className="text-lg font-medium text-slate-500">{formatMoney(earnings)}</div>
-          {startTime && <div className="mt-2 text-sm text-slate-500">Started at {format(startTime, "h:mm a")}</div>}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Progress today</span>
-            <span className="font-medium">{Math.min(Math.round((elapsedTime / 8) * 100), 100)}%</span>
-          </div>
-          <Progress value={Math.min((elapsedTime / 8) * 100, 100)} className="h-2" />
-          <p className="text-xs text-slate-500">Based on 8 hour workday</p>
+        <div className="timer-display">{formatDuration(elapsedTime)}</div>
+
+        <div style={{ fontSize: "1.5rem", marginBottom: "1rem", fontFamily: "var(--font-serif)" }}>
+          {formatMoney(earnings)}
         </div>
-      </CardContent>
-      <CardFooter className="relative flex gap-4">
-        {isTracking ? (
-          <>
-            <Button variant="outline" className="flex-1" onClick={handlePauseTracking}>
-              <Pause className="mr-2 h-4 w-4" />
-              Pause
-            </Button>
-            <Button variant="destructive" className="flex-1" onClick={handleStopTracking}>
-              <StopCircle className="mr-2 h-4 w-4" />
-              Stop
-            </Button>
-          </>
-        ) : (
-          <Button
-            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-            onClick={handleStartTracking}
-          >
-            <Play className="mr-2 h-4 w-4" />
-            Start Tracking
-          </Button>
+
+        {startTime && (
+          <div style={{ marginBottom: "1rem", fontSize: "0.875rem", opacity: "0.7" }}>
+            Started at {format(startTime, "h:mm a")}
+          </div>
         )}
-      </CardFooter>
-    </Card>
+
+        <div className="progress-bar">
+          <div
+            className="progress-bar-fill"
+            style={{ width: `${Math.min(Math.round((elapsedTime / 8) * 100), 100)}%` }}
+          ></div>
+        </div>
+        <div style={{ fontSize: "0.75rem", opacity: "0.7", textAlign: "right", marginBottom: "2rem" }}>
+          {Math.min(Math.round((elapsedTime / 8) * 100), 100)}% of 8-hour workday
+        </div>
+
+        <div className="timer-controls">
+          {isTracking ? (
+            <button className="button button-primary button-large" onClick={handleStopTracking}>
+              Stop Tracking
+            </button>
+          ) : (
+            <button className="button button-primary button-large animate-pulse" onClick={handleStartTracking}>
+              Start Tracking
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

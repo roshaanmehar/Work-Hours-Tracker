@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns"
-import { Clock, DollarSign, TrendingUp } from "lucide-react"
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTimeStore } from "@/lib/store"
 import { calculateDuration, formatDuration, formatMoney } from "@/lib/utils"
 
-export function DashboardStats() {
+export default function DashboardStats() {
   const { shifts, loadData } = useTimeStore()
   const [mounted, setMounted] = useState(false)
 
@@ -72,79 +69,34 @@ export function DashboardStats() {
   const activeHours = activeShift ? calculateDuration(activeShift.startTime, new Date().toISOString()) : 0
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10" />
-        <CardHeader className="relative pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">Currently Active</CardTitle>
-        </CardHeader>
-        <CardContent className="relative">
-          <div className="flex items-center">
-            <Clock className="mr-2 h-5 w-5 text-purple-500" />
-            <div className="text-2xl font-bold">{activeShift ? formatDuration(activeHours) : "Not tracking"}</div>
+    <div className="stats-grid">
+      <div className="stat-card">
+        <div className="stat-label">Currently Active</div>
+        <div className="stat-value">{activeShift ? formatDuration(activeHours) : "Not tracking"}</div>
+        {activeShift && (
+          <div style={{ fontSize: "0.75rem", opacity: "0.7" }}>
+            Started at {format(new Date(activeShift.startTime), "h:mm a")}
           </div>
-          {activeShift && (
-            <p className="mt-1 text-xs text-slate-500">
-              Started at {format(new Date(activeShift.startTime), "h:mm a")}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">Today</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold">{formatDuration(todayStats.hours)}</div>
-              <p className="text-xs text-slate-500">{formatMoney(todayStats.earnings)}</p>
-            </div>
-            <div className="rounded-full bg-purple-100 p-2 dark:bg-purple-900/30">
-              <Clock className="h-5 w-5 text-purple-500" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="stat-card">
+        <div className="stat-label">Today</div>
+        <div className="stat-value">{formatDuration(todayStats.hours)}</div>
+        <div style={{ fontSize: "0.875rem", opacity: "0.7" }}>{formatMoney(todayStats.earnings)}</div>
+      </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">This Week</CardTitle>
-          <CardDescription className="text-xs">
-            {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold">{formatDuration(weekStats.hours)}</div>
-              <p className="text-xs text-slate-500">{formatMoney(weekStats.earnings)}</p>
-            </div>
-            <div className="rounded-full bg-emerald-100 p-2 dark:bg-emerald-900/30">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="stat-card">
+        <div className="stat-label">This Week</div>
+        <div className="stat-value">{formatDuration(weekStats.hours)}</div>
+        <div style={{ fontSize: "0.875rem", opacity: "0.7" }}>{formatMoney(weekStats.earnings)}</div>
+      </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">This Month</CardTitle>
-          <CardDescription className="text-xs">{format(monthStart, "MMMM yyyy")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold">{formatDuration(monthStats.hours)}</div>
-              <p className="text-xs text-slate-500">{formatMoney(monthStats.earnings)}</p>
-            </div>
-            <div className="rounded-full bg-amber-100 p-2 dark:bg-amber-900/30">
-              <DollarSign className="h-5 w-5 text-amber-500" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="stat-card">
+        <div className="stat-label">This Month</div>
+        <div className="stat-value">{formatDuration(monthStats.hours)}</div>
+        <div style={{ fontSize: "0.875rem", opacity: "0.7" }}>{formatMoney(monthStats.earnings)}</div>
+      </div>
     </div>
   )
 }
