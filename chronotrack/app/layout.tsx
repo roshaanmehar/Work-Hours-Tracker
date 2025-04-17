@@ -1,15 +1,16 @@
 import type React from "react"
-import "./globals.css"
-import type { Metadata } from "next"
+import "@/app/globals.css"
+
 import { Inter } from "next/font/google"
+
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "TimeKeeper - Track Your Hours",
-  description: "A simple time tracking app to keep record of your work hours",
-  manifest: "/manifest.json",
+export const metadata = {
+  title: "Hours Tracker Pro",
+  description: "Track your working hours and earnings",
 }
 
 export default function RootLayout({
@@ -19,14 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
