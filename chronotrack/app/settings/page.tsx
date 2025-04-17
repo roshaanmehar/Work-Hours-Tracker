@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { saveSettings, getSettings, initDB } from "@/components/database"
-import GoogleSheetsSetup from "@/components/google-sheets-setup"
 
 export default function SettingsPage() {
   const [hourlyRate, setHourlyRate] = useState(0)
@@ -12,6 +11,10 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState("")
+
+  // Google Sheets settings
+  const [spreadsheetId, setSpreadsheetId] = useState("")
+  const [apiKey, setApiKey] = useState("")
 
   // Load settings on component mount
   useEffect(() => {
@@ -26,6 +29,13 @@ export default function SettingsPage() {
           setOvertimeThreshold(settings.overtimeThreshold || 8)
           setCurrency(settings.currency || "$")
         }
+
+        // Load Google Sheets settings from localStorage
+        const savedSpreadsheetId = localStorage.getItem("gs_spreadsheetId")
+        const savedApiKey = localStorage.getItem("gs_apiKey")
+
+        if (savedSpreadsheetId) setSpreadsheetId(savedSpreadsheetId)
+        if (savedApiKey) setApiKey(savedApiKey)
 
         setIsLoading(false)
       } catch (error) {
@@ -50,6 +60,10 @@ export default function SettingsPage() {
         overtimeThreshold,
         currency,
       })
+
+      // Save Google Sheets settings to localStorage
+      localStorage.setItem("gs_spreadsheetId", spreadsheetId)
+      localStorage.setItem("gs_apiKey", apiKey)
 
       setMessage("Settings saved successfully!")
 
@@ -127,15 +141,40 @@ export default function SettingsPage() {
             step="0.5"
           />
         </div>
-
-        <button className="save-button" onClick={handleSaveSettings} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Settings"}
-        </button>
-
-        {message && <div className="message">{message}</div>}
       </div>
 
-      <GoogleSheetsSetup />
+      <div className="settings-section">
+        <h2>Google Sheets Integration</h2>
+        <p>Enter your Google Sheets information to enable syncing.</p>
+
+        <div className="form-group">
+          <label htmlFor="spreadsheetId">Spreadsheet ID:</label>
+          <input
+            id="spreadsheetId"
+            type="text"
+            value={spreadsheetId}
+            onChange={(e) => setSpreadsheetId(e.target.value)}
+            placeholder="Enter your Google Spreadsheet ID"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="apiKey">API Key:</label>
+          <input
+            id="apiKey"
+            type="text"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Enter your Google API Key"
+          />
+        </div>
+      </div>
+
+      <button className="save-button" onClick={handleSaveSettings} disabled={isSaving}>
+        {isSaving ? "Saving..." : "Save Settings"}
+      </button>
+
+      {message && <div className="message">{message}</div>}
 
       <style jsx>{`
         .settings-page {
