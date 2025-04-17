@@ -1,25 +1,17 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Clock, Save, Trash2 } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { useTimeStore } from "@/lib/store"
-import { useToast } from "@/hooks/use-toast"
+import ThemeToggle from "@/components/theme-toggle"
 
 export default function SettingsPage() {
   const { clearAllData, loadData } = useTimeStore()
-  const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
   const [hourlyRate, setHourlyRate] = useState("12.50")
   const [darkMode, setDarkMode] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -34,6 +26,13 @@ export default function SettingsPage() {
     if (storedRate) {
       setHourlyRate(storedRate)
     }
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [loadData])
 
   if (!mounted) {
@@ -44,10 +43,7 @@ export default function SettingsPage() {
     // Save hourly rate to local storage
     localStorage.setItem("hourlyRate", hourlyRate)
 
-    toast({
-      title: "Settings saved",
-      description: "Your settings have been saved successfully.",
-    })
+    alert("Settings saved successfully")
   }
 
   const handleToggleDarkMode = () => {
@@ -67,105 +63,136 @@ export default function SettingsPage() {
     clearAllData()
     setShowConfirmation(false)
 
-    toast({
-      title: "Data cleared",
-      description: "All your time tracking data has been deleted.",
-      variant: "destructive",
-    })
+    alert("All data has been cleared")
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
-        <div className="container flex h-16 items-center">
-          <Link
-            href="/dashboard"
-            className="mr-4 flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
-              <Clock className="h-4 w-4 text-white" />
+    <div className="page">
+      <header className={`header ${scrolled ? "scrolled" : ""}`}>
+        <div className="container header-content">
+          <Link href="/dashboard" className="logo">
+            <div className="logo-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
             </div>
-            <h1 className="text-xl font-bold">Settings</h1>
-          </div>
+            <span className="logo-text">Tempus</span>
+          </Link>
+          <nav className="nav">
+            <Link href="/dashboard" className="nav-link">
+              Dashboard
+            </Link>
+            <Link href="/history" className="nav-link">
+              History
+            </Link>
+            <Link href="/analytics" className="nav-link">
+              Analytics
+            </Link>
+            <Link href="/settings" className="nav-link active">
+              Settings
+            </Link>
+            <ThemeToggle />
+          </nav>
         </div>
       </header>
-      <main className="container flex-1 py-8">
-        <div className="mx-auto max-w-2xl space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>App Settings</CardTitle>
-              <CardDescription>Manage your app preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="hourlyRate">Hourly Rate (£)</Label>
-                  <Input
-                    id="hourlyRate"
-                    type="number"
-                    step="0.01"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                  />
-                  <p className="mt-1 text-sm text-slate-500">This rate will be used to calculate your earnings</p>
-                </div>
+      <main className="main">
+        <div className="container">
+          <div className="card baroque-border">
+            <div className="ornament ornament-1"></div>
+            <div className="ornament ornament-2"></div>
+            <div className="card-header">
+              <h2 className="card-title">Settings</h2>
+              <p className="card-description">Manage your app preferences</p>
+            </div>
+            <div className="card-content">
+              <div className="form-group">
+                <label className="label" htmlFor="hourlyRate">
+                  Hourly Rate (£)
+                </label>
+                <input
+                  id="hourlyRate"
+                  type="number"
+                  step="0.01"
+                  className="input"
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(e.target.value)}
+                />
+                <p style={{ fontSize: "0.875rem", marginTop: "0.5rem", opacity: "0.7" }}>
+                  This rate will be used to calculate your earnings
+                </p>
+              </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="darkMode">Dark Mode</Label>
-                    <p className="text-sm text-slate-500">Toggle between light and dark theme</p>
-                  </div>
-                  <Switch id="darkMode" checked={darkMode} onCheckedChange={handleToggleDarkMode} />
+              <div className="form-group">
+                <label className="label" htmlFor="darkMode">
+                  Dark Mode
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <input id="darkMode" type="checkbox" checked={darkMode} onChange={handleToggleDarkMode} />
+                  <span>Enable dark mode</span>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleSaveSettings} className="w-full">
-                <Save className="mr-2 h-4 w-4" />
-                Save Settings
-              </Button>
-            </CardFooter>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>Manage your time tracking data</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-sm text-slate-500">
+              <div className="baroque-divider"></div>
+
+              <div className="form-group">
+                <h3 style={{ marginBottom: "1rem", fontFamily: "var(--font-serif)" }}>Data Management</h3>
+                <p style={{ fontSize: "0.875rem", marginBottom: "1rem", opacity: "0.7" }}>
                   Clear all your time tracking data. This action cannot be undone.
                 </p>
+
                 {showConfirmation ? (
-                  <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
-                    <p className="text-sm font-medium text-red-800 dark:text-red-400">
+                  <div
+                    style={{
+                      padding: "1rem",
+                      border: "1px solid var(--primary)",
+                      borderRadius: "4px",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <p style={{ marginBottom: "1rem", fontWeight: "500" }}>
                       Are you sure you want to delete all your data?
                     </p>
-                    <div className="flex gap-2">
-                      <Button variant="destructive" size="sm" onClick={handleClearData}>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button className="button button-primary" onClick={handleClearData}>
                         Yes, delete everything
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setShowConfirmation(false)}>
+                      </button>
+                      <button className="button button-secondary" onClick={() => setShowConfirmation(false)}>
                         Cancel
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ) : (
-                  <Button variant="destructive" onClick={() => setShowConfirmation(true)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
+                  <button className="button button-primary" onClick={() => setShowConfirmation(true)}>
                     Clear All Data
-                  </Button>
+                  </button>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="card-footer">
+              <button className="button button-primary" onClick={handleSaveSettings}>
+                Save Settings
+              </button>
+            </div>
+          </div>
         </div>
       </main>
+      <footer className="footer">
+        <div className="container">
+          <div className="baroque-divider"></div>
+          <p>&copy; {new Date().getFullYear()} Tempus. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   )
 }
