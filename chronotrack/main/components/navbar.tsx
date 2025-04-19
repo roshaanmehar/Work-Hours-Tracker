@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, Calendar, BarChart2, Settings, Shield } from "lucide-react"
+import { Clock, Calendar, BarChart2, Settings, Shield, DollarSign } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
@@ -8,7 +8,9 @@ import styles from "./navbar.module.css"
 
 export default function Navbar({
   activePage,
-}: { activePage: "track" | "history" | "analytics" | "settings" | "admin" }) {
+}: {
+  activePage: "track" | "history" | "analytics" | "settings" | "admin" | "expenses"
+}) {
   const pathname = usePathname()
   const isAdmin = true // This would be determined by authentication in a real app
 
@@ -25,7 +27,9 @@ export default function Navbar({
             ? "settings"
             : pathname === "/admin"
               ? "admin"
-              : "track")
+              : pathname === "/expenses"
+                ? "expenses"
+                : "track")
 
   return (
     <motion.nav
@@ -41,6 +45,10 @@ export default function Navbar({
       <Link href="/history" className={`${styles.navItem} ${currentPage === "history" ? styles.active : ""}`}>
         <Calendar size={22} />
         <span>History</span>
+      </Link>
+      <Link href="/expenses" className={`${styles.navItem} ${currentPage === "expenses" ? styles.active : ""}`}>
+        <DollarSign size={22} />
+        <span>Expenses</span>
       </Link>
       <Link href="/analytics" className={`${styles.navItem} ${currentPage === "analytics" ? styles.active : ""}`}>
         <BarChart2 size={22} />
