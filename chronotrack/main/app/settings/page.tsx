@@ -1,17 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Save, RefreshCw, Download, User, Clock } from "lucide-react"
+import { Save, RefreshCw, Download, User, Clock, Shield, Key } from "lucide-react"
 import Navbar from "@/components/navbar"
+import AdminLogin from "@/components/admin-login"
 import styles from "./page.module.css"
 
 export default function SettingsPage() {
   const [timeZone, setTimeZone] = useState("America/New_York")
   const [syncStatus, setSyncStatus] = useState("Last synced: 10 minutes ago")
   const [isSyncing, setIsSyncing] = useState(false)
+  const [showAdminSection, setShowAdminSection] = useState(false)
+  const [adminAuthenticated, setAdminAuthenticated] = useState(false)
+  const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null)
+
+  // Session timeout handler - reset after 90 seconds of inactivity
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      // Redirect to login page
+      window.location.href = "/"
+    }, 90 * 1000)
+
+    // Cleanup on unmount
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [])
+
+  const resetSessionTimeout = () => {
+    // No need to do anything here since we're using a single timeout
+    // that gets cleared on component unmount
+  }
 
   const handleSync = () => {
+    resetSessionTimeout()
     setIsSyncing(true)
     setSyncStatus("Syncing...")
 
@@ -22,8 +45,13 @@ export default function SettingsPage() {
     }, 2000)
   }
 
+  const handleAdminLogin = () => {
+    setAdminAuthenticated(true)
+    setShowAdminSection(false)
+  }
+
   return (
-    <div className={styles.container}>
+    <div className={styles.container} onClick={resetSessionTimeout}>
       <header className={styles.header}>
         <h1>Settings</h1>
       </header>
@@ -78,6 +106,19 @@ export default function SettingsPage() {
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
+          <Key size={18} />
+          <h2>Security</h2>
+        </div>
+
+        <div className={styles.buttonGroup}>
+          <motion.button className={styles.button} whileTap={{ scale: 0.95 }}>
+            Change PIN
+          </motion.button>
+        </div>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
           <RefreshCw size={18} />
           <h2>Sync Settings</h2>
         </div>
@@ -105,6 +146,123 @@ export default function SettingsPage() {
           </motion.button>
         </div>
       </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <Shield size={18} />
+          <h2>Admin Access</h2>
+        </div>
+
+        {adminAuthenticated ? (
+          <div className={styles.adminSection}>
+            <div className={styles.adminMessage}>You are authenticated as an administrator.</div>
+
+            <div className={styles.adminPanel}>
+              <h3>Job Management</h3>
+              <div className={styles.jobList}>
+                <div className={styles.jobItem}>
+                  <div className={styles.jobDetails}>
+                    <span className={styles.jobName}>Web Development</span>
+                    <span className={styles.jobRate}>$50/hr</span>
+                  </div>
+                  <div className={styles.jobActions}>
+                    <button className={styles.smallButton}>Edit</button>
+                    <button className={styles.smallButton}>Delete</button>
+                  </div>
+                </div>
+
+                <div className={styles.jobItem}>
+                  <div className={styles.jobDetails}>
+                    <span className={styles.jobName}>Design Work</span>
+                    <span className={styles.jobRate}>$45/hr</span>
+                  </div>
+                  <div className={styles.jobActions}>
+                    <button className={styles.smallButton}>Edit</button>
+                    <button className={styles.smallButton}>Delete</button>
+                  </div>
+                </div>
+
+                <div className={styles.jobItem}>
+                  <div className={styles.jobDetails}>
+                    <span className={styles.jobName}>Client Meeting</span>
+                    <span className={styles.jobRate}>$60/hr</span>
+                  </div>
+                  <div className={styles.jobActions}>
+                    <button className={styles.smallButton}>Edit</button>
+                    <button className={styles.smallButton}>Delete</button>
+                  </div>
+                </div>
+              </div>
+
+              <button className={styles.addButton}>+ Add New Job</button>
+
+              <h3>Default Job Rules</h3>
+              <div className={styles.rulesList}>
+                <div className={styles.ruleItem}>
+                  <div className={styles.ruleDetails}>
+                    <span>Monday-Friday, 9:00-12:00</span>
+                    <span className={styles.jobName}>Web Development</span>
+                  </div>
+                  <div className={styles.ruleActions}>
+                    <button className={styles.smallButton}>Edit</button>
+                    <button className={styles.smallButton}>Delete</button>
+                  </div>
+                </div>
+
+                <div className={styles.ruleItem}>
+                  <div className={styles.ruleDetails}>
+                    <span>Monday-Friday, 12:00-14:00</span>
+                    <span className={styles.jobName}>Client Meeting</span>
+                  </div>
+                  <div className={styles.ruleActions}>
+                    <button className={styles.smallButton}>Edit</button>
+                    <button className={styles.smallButton}>Delete</button>
+                  </div>
+                </div>
+              </div>
+
+              <button className={styles.addButton}>+ Add New Rule</button>
+
+              <h3>Audit Log</h3>
+              <div className={styles.auditLog}>
+                <div className={styles.logEntry}>
+                  <span className={styles.logTime}>2025-04-20 09:15:22</span>
+                  <span className={styles.logAction}>Clock In</span>
+                  <span className={styles.logDetails}>Job: Web Development</span>
+                </div>
+
+                <div className={styles.logEntry}>
+                  <span className={styles.logTime}>2025-04-20 12:30:45</span>
+                  <span className={styles.logAction}>Clock Out</span>
+                  <span className={styles.logDetails}>Duration: 03:15:23</span>
+                </div>
+
+                <div className={styles.logEntry}>
+                  <span className={styles.logTime}>2025-04-19 16:42:10</span>
+                  <span className={styles.logAction}>Modified Entry</span>
+                  <span className={styles.logDetails}>Changed clock-in time from 09:00 to 08:45</span>
+                </div>
+              </div>
+
+              <button className={styles.viewMoreButton}>View Full Audit Log</button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.adminLoginPrompt}>
+            <p>Admin authentication required to access job management, default job rules, and audit logs.</p>
+            <motion.button
+              className={styles.adminButton}
+              onClick={() => setShowAdminSection(true)}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Shield size={16} />
+              Authenticate as Admin
+            </motion.button>
+          </div>
+        )}
+      </div>
+
+      {showAdminSection && <AdminLogin onSuccess={handleAdminLogin} onCancel={() => setShowAdminSection(false)} />}
 
       <div className={styles.saveButtonContainer}>
         <motion.button className={`${styles.button} ${styles.saveButton}`} whileTap={{ scale: 0.95 }}>
