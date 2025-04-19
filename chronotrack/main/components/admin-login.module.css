@@ -1,0 +1,150 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+  
+  .modal {
+    width: 100%;
+    max-width: 400px;
+    background-color: #1e1e1e;
+    border: 4px solid #333;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 2px solid #333;
+  }
+  
+  .modalTitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #e5b80b;
+  }
+  
+  .modalTitle h2 {
+    font-family: var(--font-pixel), monospace;
+    font-size: 1rem;
+  }
+  
+  .closeButton {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0.25rem;
+  }
+  
+  .closeButton:hover {
+    color: #e5b80b;
+  }
+  
+  .form {
+    padding: 1.5rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1.5rem;
+  }
+  
+  .formGroup label {
+    display: block;
+    font-family: var(--font-pixel), monospace;
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #000;
+    border: 2px solid #333;
+    color: #e5b80b;
+    font-family: var(--font-pixel), monospace;
+  }
+  
+  .input:focus {
+    border-color: #e5b80b;
+    outline: none;
+  }
+  
+  .error {
+    color: #b22222;
+    margin-bottom: 1rem;
+    font-family: var(--font-pixel), monospace;
+    font-size: 0.8rem;
+  }
+  
+  .lockedMessage {
+    color: #b22222;
+    margin-bottom: 1rem;
+    font-family: var(--font-pixel), monospace;
+    font-size: 0.8rem;
+  }
+  
+  .timer {
+    font-weight: bold;
+  }
+  
+  .formActions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .cancelButton,
+  .loginButton {
+    flex: 1;
+    padding: 0.75rem;
+    font-family: var(--font-pixel), monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  
+  .cancelButton {
+    background-color: #333;
+    border: 2px solid #444;
+    color: #aaa;
+  }
+  
+  .cancelButton:hover {
+    background-color: #444;
+  }
+  
+  .loginButton {
+    background-color: #000;
+    border: 2px solid #e5b80b;
+    color: #e5b80b;
+  }
+  
+  .loginButton:hover:not(:disabled) {
+    background-color: #111;
+  }
+  
+  .loginButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .hint {
+    margin-top: 1.5rem;
+    color: #666;
+    font-size: 0.7rem;
+    text-align: center;
+    font-family: var(--font-pixel), monospace;
+  }
+  
