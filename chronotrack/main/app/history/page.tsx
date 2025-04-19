@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, Filter, Clock } from "lucide-react"
+import { ChevronDown, Clock, Calendar } from "lucide-react"
 import Navbar from "@/components/navbar"
 import styles from "./page.module.css"
 
 // Mock data - would be fetched from backend in real implementation
+// Modified to show only final records without modification indicators
 const mockEntries = [
   {
     id: 1,
@@ -14,7 +15,6 @@ const mockEntries = [
     clockIn: "09:15:00",
     clockOut: "12:30:00",
     duration: "03:15:00",
-    status: "active",
     breaks: [{ start: "10:30:00", end: "10:45:00", duration: "00:15:00" }],
   },
   {
@@ -23,29 +23,27 @@ const mockEntries = [
     clockIn: "13:30:00",
     clockOut: "17:45:00",
     duration: "04:15:00",
-    status: "active",
     breaks: [{ start: "15:00:00", end: "15:20:00", duration: "00:20:00" }],
   },
   {
     id: 3,
     date: "2025-04-18",
-    clockIn: "08:45:00",
-    clockOut: "16:30:00",
-    duration: "07:45:00",
-    status: "modified",
+    clockIn: "08:45:00", // This is the modified time (was 09:00:00)
+    clockOut: "16:30:00", // This is the modified time (was 16:00:00)
+    duration: "07:45:00", // This is the modified duration (was 07:00:00)
     breaks: [
       { start: "12:00:00", end: "12:45:00", duration: "00:45:00" },
       { start: "14:30:00", end: "14:45:00", duration: "00:15:00" },
     ],
   },
+  // Removed deleted entry
   {
-    id: 4,
-    date: "2025-04-17",
-    clockIn: "09:00:00",
-    clockOut: "17:00:00",
-    duration: "08:00:00",
-    status: "deleted",
-    breaks: [],
+    id: 5,
+    date: "2025-04-16",
+    clockIn: "08:30:00",
+    clockOut: "16:45:00",
+    duration: "08:15:00",
+    breaks: [{ start: "12:15:00", end: "13:00:00", duration: "00:45:00" }],
   },
 ]
 
@@ -53,132 +51,128 @@ export default function HistoryPage() {
   const [expandedEntry, setExpandedEntry] = useState<number | null>(null)
   const [filter, setFilter] = useState("all")
   const [showFilterMenu, setShowFilterMenu] = useState(false)
+  const [dateRange, setDateRange] = useState("week")
 
   const toggleExpand = (id: number) => {
     setExpandedEntry(expandedEntry === id ? null : id)
   }
 
-  const filteredEntries = filter === "all" ? mockEntries : mockEntries.filter((entry) => entry.status === filter)
+  // Group entries by date
+  const entriesByDate = mockEntries.reduce(
+    (acc, entry) => {
+      const date = entry.date
+      if (!acc[date]) {
+        acc[date] = []
+      }
+      acc[date].push(entry)
+      return acc
+    },
+    {} as Record<string, typeof mockEntries>,
+  )
+
+  // Sort dates in descending order
+  const sortedDates = Object.keys(entriesByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>History</h1>
-        <button className={styles.filterButton} onClick={() => setShowFilterMenu(!showFilterMenu)}>
-          <Filter size={18} />
-          <span>Filter</span>
-        </button>
+        <h1>Time History</h1>
+        <div className={styles.headerActions}>
+          <button
+            className={`${styles.filterButton} ${dateRange === "week" ? styles.active : ""}`}
+            onClick={() => setDateRange("week")}
+          >
+            <span>This Week</span>
+          </button>
+          <button
+            className={`${styles.filterButton} ${dateRange === "month" ? styles.active : ""}`}
+            onClick={() => setDateRange("month")}
+          >
+            <span>This Month</span>
+          </button>
+          <button
+            className={`${styles.filterButton} ${dateRange === "all" ? styles.active : ""}`}
+            onClick={() => setDateRange("all")}
+          >
+            <span>All Time</span>
+          </button>
+        </div>
       </header>
 
-      <AnimatePresence>
-        {showFilterMenu && (
-          <motion.div
-            className={styles.filterMenu}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className={styles.filterTabs}>
-              <button
-                className={`${styles.filterTab} ${filter === "all" ? styles.active : ""}`}
-                onClick={() => setFilter("all")}
-              >
-                All
-              </button>
-              <button
-                className={`${styles.filterTab} ${filter === "active" ? styles.active : ""}`}
-                onClick={() => setFilter("active")}
-              >
-                Active
-              </button>
-              <button
-                className={`${styles.filterTab} ${filter === "modified" ? styles.active : ""}`}
-                onClick={() => setFilter("modified")}
-              >
-                Modified
-              </button>
-              <button
-                className={`${styles.filterTab} ${filter === "deleted" ? styles.active : ""}`}
-                onClick={() => setFilter("deleted")}
-              >
-                Deleted
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className={styles.entriesList}>
-        {filteredEntries.length === 0 ? (
+        {sortedDates.length === 0 ? (
           <div className={styles.emptyState}>
             <Clock size={48} />
             <p>No time entries found</p>
           </div>
         ) : (
-          filteredEntries.map((entry) => (
-            <motion.div
-              key={entry.id}
-              className={`${styles.entryCard} ${styles[entry.status]}`}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className={styles.entryHeader} onClick={() => toggleExpand(entry.id)}>
-                <div className={styles.entryDate}>
-                  <h3>
-                    {new Date(entry.date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </h3>
-                  <span className={styles.statusBadge}>{entry.status}</span>
-                </div>
-                <div className={styles.entryTime}>
-                  <p>{entry.duration}</p>
-                  <motion.div animate={{ rotate: expandedEntry === entry.id ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                    <ChevronDown size={16} />
-                  </motion.div>
-                </div>
+          sortedDates.map((date) => (
+            <div key={date} className={styles.dateGroup}>
+              <div className={styles.dateHeader}>
+                <Calendar size={16} />
+                <h2>
+                  {new Date(date).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </h2>
               </div>
 
-              <AnimatePresence>
-                {expandedEntry === entry.id && (
-                  <motion.div
-                    className={styles.entryDetails}
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className={styles.detailRow}>
-                      <span>Clock In:</span>
-                      <span>{entry.clockIn}</span>
+              {entriesByDate[date].map((entry) => (
+                <motion.div
+                  key={entry.id}
+                  className={styles.entryCard}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className={styles.entryHeader} onClick={() => toggleExpand(entry.id)}>
+                    <div className={styles.entryTime}>
+                      <span className={styles.timeRange}>
+                        {entry.clockIn} - {entry.clockOut}
+                      </span>
+                      <span className={styles.duration}>{entry.duration}</span>
                     </div>
-                    <div className={styles.detailRow}>
-                      <span>Clock Out:</span>
-                      <span>{entry.clockOut}</span>
-                    </div>
+                    <motion.div
+                      animate={{ rotate: expandedEntry === entry.id ? 180 : 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={styles.expandIcon}
+                    >
+                      <ChevronDown size={16} />
+                    </motion.div>
+                  </div>
 
-                    {entry.breaks.length > 0 && (
-                      <div className={styles.breaksList}>
-                        <h4>Breaks ({entry.breaks.length})</h4>
-                        {entry.breaks.map((breakItem, index) => (
-                          <div key={index} className={styles.breakItem}>
-                            <span>
-                              {breakItem.start} - {breakItem.end}
-                            </span>
-                            <span>{breakItem.duration}</span>
+                  <AnimatePresence>
+                    {expandedEntry === entry.id && (
+                      <motion.div
+                        className={styles.entryDetails}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {entry.breaks.length > 0 && (
+                          <div className={styles.breaksList}>
+                            <h4>Breaks ({entry.breaks.length})</h4>
+                            {entry.breaks.map((breakItem, index) => (
+                              <div key={index} className={styles.breakItem}>
+                                <span>
+                                  {breakItem.start} - {breakItem.end}
+                                </span>
+                                <span>{breakItem.duration}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        )}
+                      </motion.div>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
           ))
         )}
       </div>
