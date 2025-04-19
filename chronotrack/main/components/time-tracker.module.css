@@ -1,0 +1,151 @@
+.tracker {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  flex: 1;
+  background-color: #121212;
+  color: #f0f0f0;
+  height: 100vh;
+  padding-bottom: 80px; /* Space for navbar */
+}
+
+.header {
+  margin-bottom: 2rem;
+  padding-top: 1rem;
+}
+
+.header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  text-align: center;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background-color: #1e1e1e;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.statusIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.status p {
+  font-size: 1rem;
+  color: #f0f0f0;
+}
+
+.timeDisplay {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  background-color: #1e1e1e;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.timeDisplay h2 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #e5b80b;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 10px rgba(229, 184, 11, 0.3);
+}
+
+.timeDisplay p {
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  min-height: 120px;
+}
+
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.primary {
+  background-color: #e5b80b;
+  color: #121212;
+}
+
+.primary:hover {
+  background-color: #d4aa0a;
+}
+
+.secondary {
+  background-color: #333;
+  color: #e5b80b;
+  border: 1px solid #e5b80b;
+}
+
+.secondary:hover {
+  background-color: #444;
+}
+
+.danger {
+  background-color: #e63946;
+  color: white;
+}
+
+.danger:hover {
+  background-color: #d62f3c;
+}
+
+.summary {
+  margin-top: auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background-color: #1e1e1e;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.summary h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #e5b80b;
+}
+
+.summary p {
+  font-size: 1rem;
+  color: #f0f0f0;
+}
+
+.summary strong {
+  color: #e5b80b;
+  font-weight: 600;
+}

@@ -1,0 +1,304 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  min-height: 100vh;
+  background-color: #121212;
+  color: #f0f0f0;
+  padding-bottom: 80px; /* Space for navbar */
+}
+
+.header {
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+}
+
+.header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.timeframeSelector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.timeframeButton {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  color: #aaa;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeframeButton.active {
+  background-color: #e5b80b;
+  color: #121212;
+  border-color: #e5b80b;
+}
+
+.statsCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 0.5rem;
+  border-radius: 12px;
+  background-color: #1e1e1e;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid #333;
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(229, 184, 11, 0.2);
+  color: #e5b80b;
+  margin-bottom: 0.75rem;
+}
+
+.statInfo h3 {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+}
+
+.statInfo p {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e5b80b;
+}
+
+.productivitySection {
+  margin-bottom: 2rem;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid #333;
+}
+
+.productivitySection h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.scoreContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scoreChart {
+  max-width: 100%;
+}
+
+.chartContainer {
+  margin-bottom: 2rem;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid #333;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.chartContainer h2,
+.heatmapContainer h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggleInput {
+  margin-right: 0.5rem;
+  accent-color: #e5b80b;
+}
+
+.toggleLabel {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.chart {
+  display: flex;
+  height: 200px;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 2rem;
+  position: relative;
+}
+
+.chart::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 2rem;
+  background: linear-gradient(to bottom, rgba(51, 51, 51, 0.5) 1px, transparent 1px);
+  background-size: 100% 25%;
+  z-index: 0;
+}
+
+.chartColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.chartBar {
+  width: 70%;
+  max-width: 30px;
+  background-color: #e5b80b;
+  border-radius: 4px 4px 0 0;
+}
+
+.breakBar {
+  width: 70%;
+  max-width: 30px;
+  background-color: #e63946;
+  border-radius: 4px 4px 0 0;
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+}
+
+.chartLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  bottom: -2rem;
+  width: 100%;
+  text-align: center;
+}
+
+.chartLabel span {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.chartValue {
+  font-size: 0.7rem;
+  color: #e5b80b;
+  margin-top: 0.25rem;
+}
+
+.heatmapContainer {
+  margin-bottom: 2rem;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid #333;
+}
+
+.heatmap {
+  display: flex;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.heatmapLabels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 0.75rem;
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.heatmapLabels div {
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.heatmapGrid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmapRow {
+  display: flex;
+  gap: 2px;
+  height: 20px;
+}
+
+.heatmapCell {
+  flex: 1;
+  height: 100%;
+  background-color: #252525;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.heatmapCell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+.heatmapLegend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legendColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background-color: #e5b80b;
+}
+
+.legendItem span {
+  font-size: 0.75rem;
+  color: #aaa;
+}
