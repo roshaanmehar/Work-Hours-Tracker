@@ -1,19 +1,13 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Press_Start_2P } from "next/font/google"
 import { AuthProvider } from "@/context/auth-context"
 import AuthCheck from "@/components/auth-check"
 import Preload from "@/components/preload"
 import PageLoader from "@/components/page-loader"
 import "./globals.css"
 
-// Initialize the Press Start 2P font
-const pixelFont = Press_Start_2P({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-pixel",
-})
+// Remove the Press_Start_2P font import and replace with a standard font-family
+// that will be defined in globals.css
 
 export const metadata: Metadata = {
   title: "Pixel Time Tracker",
@@ -26,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={pixelFont.variable}>
+    <html lang="en">
       <body>
         <AuthProvider>
           <AuthCheck>
