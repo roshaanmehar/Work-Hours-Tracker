@@ -2,36 +2,37 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-// Import only the specific icons you need
 import { Play, Square, Coffee, RotateCcw, Clock } from "lucide-react"
 import Navbar from "@/components/navbar"
 import PinLogin from "@/components/pin-login"
 import { useAuth } from "@/context/auth-context"
+import { useJobs, useSuggestedJob, useTodayTotal, useCreateTimeEntry, useUpdateTimeEntry } from "@/hooks/use-data"
 import styles from "./page.module.css"
 
 type TrackingState = "idle" | "tracking" | "break"
 
 export default function Home() {
   const { authenticated, resetSessionTimeout } = useAuth()
+  const { data: jobs, isLoading: jobsLoading } = useJobs()
+  const { data: suggestedJob, isLoading: suggestedJobLoading } = useSuggestedJob()
+  const { data: todayTotal, isLoading: todayTotalLoading } = useTodayTotal()
+  const { mutate: createTimeEntry } = useCreateTimeEntry()
+  const { mutate: updateTimeEntry } = useUpdateTimeEntry()
+
   const [state, setState] = useState<TrackingState>("idle")
   const [currentSession, setCurrentSession] = useState<{
+    id?: number
     startTime: Date | null
     breakStartTime: Date | null
     totalBreakTime: number
-    selectedJob: string
+    selectedJob: number | null
   }>({
     startTime: null,
     breakStartTime: null,
     totalBreakTime: 0,
-    selectedJob: "Default Job",
+    selectedJob: null,
   })
   const [elapsedTime, setElapsedTime] = useState("00:00:00")
-  const [todayTotal, setTodayTotal] = useState("03:45:12")
-  const [availableJobs, setAvailableJobs] = useState([
-    { id: 1, name: "Web Development", rate: 50 },
-    { id: 2, name: "Design Work", rate: 45 },
-    { id: 3, name: "Client Meeting", rate: 60 },
-  ])
 
   // Format time as HH:MM:SS
   const formatTime = (milliseconds: number) => {
@@ -75,120 +76,126 @@ export default function Home() {
     if (authenticated) {
       resetSessionTimeout()
     }
-  }, [authenticated, resetSessionTimeout]) // resetSessionTimeout is now memoized, so this is safe
+  }, [authenticated, resetSessionTimeout])
 
-  // Get suggested job based on day and time
-  const getSuggestedJob = () => {
+  const handleClockIn = async () => {
+    // Use suggested job or first available job
+    const jobId = suggestedJob?.id || (jobs && jobs.length > 0 ? jobs[0].id : null)
+
+    if (!jobId) {
+      console.error("No job available for clock in")
+      return
+    }
+
     const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinutes = now.getMinutes()
-    const currentTime = currentHour + currentMinutes / 60 // Convert to decimal time (e.g., 9:30 = 9.5)
+    const timeString = now.toTimeString().split(" ")[0]
+    const dateString = now.toISOString().split("T")[0]
 
-    // Get day of week as string (0 = Sunday, 1 = Monday, etc.)
-    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    const currentDay = daysOfWeek[now.getDay()]
-
-    // This would come from the database in a real implementation
-    // For now, we'll use the mock rules from the admin page
-    const jobRules = [
-      { id: 1, days: "Monday-Friday", timeRange: "9:00-12:00", job: "Web Development" },
-      { id: 2, days: "Monday-Friday", timeRange: "12:00-14:00", job: "Client Meeting" },
-      { id: 3, days: "Monday-Friday", timeRange: "14:00-17:00", job: "Design Work" },
-      { id: 4, days: "Saturday", timeRange: "10:00-16:00", job: "Web Development" },
-      { id: 5, days: "Sunday", timeRange: "12:00-18:00", job: "Design Work" },
-    ]
-
-    // Find the first matching rule
-    for (const rule of jobRules) {
-      // Check if current day matches the rule
-      const matchesDay = checkDayMatch(currentDay, rule.days)
-
-      // If day matches, check if current time is within the time range
-      if (matchesDay) {
-        const [startTime, endTime] = parseTimeRange(rule.timeRange)
-        if (currentTime >= startTime && currentTime < endTime) {
-          // Find the job object that matches the rule
-          const matchingJob = availableJobs.find((job) => job.name === rule.job)
-          if (matchingJob) {
-            return matchingJob
-          }
-        }
-      }
-    }
-
-    // Default to first job if no rules match
-    return availableJobs[0]
-  }
-
-  // Helper function to check if the current day matches the rule's day specification
-  const checkDayMatch = (currentDay, ruleDays) => {
-    if (ruleDays === "Weekends") {
-      return currentDay === "Saturday" || currentDay === "Sunday"
-    }
-
-    if (ruleDays === "Monday-Friday") {
-      return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(currentDay)
-    }
-
-    // Handle multiple days separated by commas
-    if (ruleDays.includes(",")) {
-      const days = ruleDays.split(",").map((d) => d.trim())
-      return days.includes(currentDay)
-    }
-
-    // Single day match
-    return ruleDays === currentDay
-  }
-
-  // Helper function to parse time range string (e.g., "9:00-17:00") into decimal hours
-  const parseTimeRange = (timeRange) => {
-    const [start, end] = timeRange.split("-")
-
-    const parseTime = (timeStr) => {
-      const [hours, minutes] = timeStr.split(":").map(Number)
-      return hours + minutes / 60
-    }
-
-    return [parseTime(start), parseTime(end)]
-  }
-
-  const handleClockIn = () => {
-    // Get suggested job
-    const suggestedJob = getSuggestedJob()
-
-    setState("tracking")
-    setCurrentSession({
-      startTime: new Date(),
-      breakStartTime: null,
-      totalBreakTime: 0,
-      selectedJob: suggestedJob.name,
+    // Create time entry in database
+    const entry = await createTimeEntry({
+      user_id: "current-user-id", // This would come from auth in a real app
+      date: dateString,
+      clock_in: timeString,
+      clock_out: null,
+      duration: null,
+      job_id: jobId,
+      status: "active",
+      breaks: [],
     })
+
+    if (entry) {
+      setState("tracking")
+      setCurrentSession({
+        id: entry.id,
+        startTime: now,
+        breakStartTime: null,
+        totalBreakTime: 0,
+        selectedJob: jobId,
+      })
+    }
   }
 
-  const handleClockOut = () => {
+  const handleClockOut = async () => {
+    if (!currentSession.id || !currentSession.startTime) return
+
+    const now = new Date()
+    const timeString = now.toTimeString().split(" ")[0]
+
+    // Calculate duration
+    let elapsed = now.getTime() - currentSession.startTime.getTime()
+    elapsed -= currentSession.totalBreakTime
+    const durationString = formatTime(elapsed)
+
+    // Update time entry in database
+    await updateTimeEntry(currentSession.id, {
+      clock_out: timeString,
+      duration: durationString,
+      breaks: currentSession.breakStartTime ? [] : currentSession.breaks, // Clear any ongoing breaks
+    })
+
     setState("idle")
     setCurrentSession({
       startTime: null,
       breakStartTime: null,
       totalBreakTime: 0,
-      selectedJob: "Default Job",
+      selectedJob: null,
     })
     setElapsedTime("00:00:00")
   }
 
-  const handleBreak = () => {
+  const handleBreak = async () => {
+    if (!currentSession.id) return
+
+    const now = new Date()
+    const timeString = now.toTimeString().split(" ")[0]
+
+    // Get current breaks array
+    const currentBreaks = Array.isArray(currentSession.breaks) ? [...currentSession.breaks] : []
+
+    // Add new break start
+    const newBreak = {
+      start: timeString,
+      end: null,
+      duration: null,
+    }
+
+    // Update time entry with new break
+    await updateTimeEntry(currentSession.id, {
+      breaks: [...currentBreaks, newBreak],
+    })
+
     setState("break")
     setCurrentSession({
       ...currentSession,
-      breakStartTime: new Date(),
+      breakStartTime: now,
     })
   }
 
-  const handleResumeWork = () => {
-    if (!currentSession.breakStartTime) return
+  const handleResumeWork = async () => {
+    if (!currentSession.id || !currentSession.breakStartTime) return
 
     const now = new Date()
+    const timeString = now.toTimeString().split(" ")[0]
     const breakDuration = now.getTime() - currentSession.breakStartTime.getTime()
+    const breakDurationString = formatTime(breakDuration)
+
+    // Get current breaks array
+    const currentBreaks = Array.isArray(currentSession.breaks) ? [...currentSession.breaks] : []
+
+    // Update the last break with end time and duration
+    if (currentBreaks.length > 0) {
+      const lastBreakIndex = currentBreaks.length - 1
+      currentBreaks[lastBreakIndex] = {
+        ...currentBreaks[lastBreakIndex],
+        end: timeString,
+        duration: breakDurationString,
+      }
+    }
+
+    // Update time entry with updated breaks
+    await updateTimeEntry(currentSession.id, {
+      breaks: currentBreaks,
+    })
 
     setState("tracking")
     setCurrentSession({
@@ -201,8 +208,29 @@ export default function Home() {
   // Split time into digits for animation
   const [hours, minutes, seconds] = elapsedTime.split(":")
 
+  // Get selected job name
+  const getSelectedJobName = () => {
+    if (!currentSession.selectedJob || !jobs) return "Unknown Job"
+    const job = jobs.find((j) => j.id === currentSession.selectedJob)
+    return job ? job.name : "Unknown Job"
+  }
+
   if (!authenticated) {
     return <PinLogin />
+  }
+
+  // Show loading state
+  if (jobsLoading || suggestedJobLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.mainContent}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -215,7 +243,7 @@ export default function Home() {
               backgroundColor: state === "idle" ? "#333" : state === "tracking" ? "#e5b80b" : "#b22222",
             }}
           >
-            {state === "idle" ? "READY" : state === "tracking" ? `WORKING: ${currentSession.selectedJob}` : "ON BREAK"}
+            {state === "idle" ? "READY" : state === "tracking" ? `WORKING: ${getSelectedJobName()}` : "ON BREAK"}
           </div>
 
           <div className={styles.pixelTimeDisplay}>
@@ -293,7 +321,7 @@ export default function Home() {
           <div className={styles.todaySummary}>
             <Clock size={16} />
             <span>
-              Today: <strong>{todayTotal}</strong>
+              Today: <strong>{todayTotalLoading ? "Loading..." : todayTotal || "00:00:00"}</strong>
             </span>
           </div>
         </div>
