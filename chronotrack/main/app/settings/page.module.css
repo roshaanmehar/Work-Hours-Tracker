@@ -158,6 +158,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: var(--font-pixel), monospace;
+  margin-top: 1rem;
 }
 
 .adminButton:hover {
@@ -173,11 +174,22 @@
 }
 
 .adminMessage {
-  padding: 0.75rem;
-  background-color: rgba(229, 184, 11, 0.1);
-  border: 2px solid #e5b80b;
-  color: #e5b80b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  background-color: #1e1e1e;
+  border: 4px solid #333;
   text-align: center;
+}
+
+.adminMessage svg {
+  color: #e5b80b;
+}
+
+.adminMessage p {
+  color: #f0f0f0;
   font-family: var(--font-pixel), monospace;
   font-size: 0.9rem;
 }
@@ -326,4 +338,26 @@
   .buttonGroup {
     flex-direction: row;
   }
+}
+
+.restrictedMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.restrictedMessage h2 {
+  font-size: 1.2rem;
+  color: #e5b80b;
+  margin: 1rem 0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.restrictedMessage p {
+  color: #aaa;
+  margin-bottom: 1rem;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.9rem;
 }
