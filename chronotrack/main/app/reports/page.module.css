@@ -1,505 +1,610 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    min-height: 100vh;
-    background-color: #121212;
-    color: #f0f0f0;
-    padding-bottom: 80px; /* Space for navbar */
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  min-height: 100vh;
+  background-color: #121212;
+  color: #f0f0f0;
+  padding-bottom: 80px; /* Space for navbar */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+}
+
+.header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #000;
+  border: 2px solid #333;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.actionButton:hover {
+  background-color: #111;
+  border-color: #e5b80b;
+}
+
+.filtersPanel {
+  background-color: #1e1e1e;
+  border: 2px solid #333;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filterRow:last-child {
+  margin-bottom: 0;
+}
+
+.filterGroup {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filterGroup label {
+  display: block;
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filterButton {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: #252525;
+  border: 2px solid #333;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.filterButton.active {
+  background-color: #000;
+  border-color: #e5b80b;
+  color: #e5b80b;
+}
+
+.select,
+.input {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #252525;
+  border: 2px solid #333;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.8rem;
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
+  border-color: #e5b80b;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+  background-color: #252525;
+  border: 2px solid #333;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.8rem;
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summaryCard {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  border: 2px solid #333;
+}
+
+.summaryIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #000;
+  border: 2px solid #e5b80b;
+  color: #e5b80b;
+}
+
+.summaryIcon.profit {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.summaryIcon.loss {
+  border-color: #f44336;
+  color: #f44336;
+}
+
+.summaryContent h3 {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.summaryContent p {
+  font-size: 1.2rem;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.summaryContent p.profit {
+  color: #4caf50;
+}
+
+.summaryContent p.loss {
+  color: #f44336;
+}
+
+.tabsContainer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #333;
+  padding-bottom: 0.5rem;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  border: none;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.tabButton:hover {
+  color: #e5b80b;
+}
+
+.tabButton.activeTab {
+  color: #e5b80b;
+}
+
+.tabButton.activeTab::after {
+  content: "";
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #e5b80b;
+}
+
+.reportContent {
+  flex: 1;
+}
+
+.entriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #666;
+  text-align: center;
+  background-color: #1e1e1e;
+  border: 2px solid #333;
+  margin: 2rem 0;
+}
+
+.emptyState p {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dateHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #1e1e1e;
+  border-left: 4px solid #e5b80b;
+}
+
+.dateHeader h2 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.entryCard {
+  border: 2px solid #333;
+  overflow: hidden;
+  background-color: #1e1e1e;
+}
+
+.entryCard:hover {
+  border-color: #444;
+  background-color: #252525;
+}
+
+.entryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.entryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.entryTime {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeRange {
+  font-size: 0.9rem;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.duration {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.entryJob {
+  display: flex;
+  flex-direction: column;
+}
+
+.jobName {
+  font-size: 0.9rem;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.jobRate {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.billableStatus {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.expenseCategory {
+  display: flex;
+  flex-direction: column;
+}
+
+.categoryName {
+  font-size: 0.9rem;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.expenseDescription {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.entryEarnings {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.earningsLabel {
+  font-size: 0.7rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.earningsValue {
+  font-size: 1.1rem;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.expandIcon {
+  margin-left: 1rem;
+  color: #aaa;
+}
+
+.entryDetails {
+  padding: 0 1rem 1rem;
+  overflow: hidden;
+  background-color: #252525;
+  border-top: 1px solid #333;
+}
+
+.breaksList {
+  margin-bottom: 1rem;
+}
+
+.breaksList h4 {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #aaa;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.breakItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.entryCalculation {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  padding: 0.75rem;
+}
+
+.calculationRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #333;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.85rem;
+}
+
+.calculationRow:last-child {
+  border-bottom: none;
+  font-weight: bold;
+  color: #e5b80b;
+}
+
+/* Print styles */
+@media print {
+  .container {
+    background-color: white;
+    color: black;
+    padding: 0;
   }
-  
+
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-top: 1rem;
+    padding: 1rem;
+    border-bottom: 2px solid #333;
   }
-  
+
   .header h1 {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #f0f0f0;
-    font-family: var(--font-pixel), monospace;
+    color: black;
   }
-  
-  .headerActions {
-    display: flex;
-    gap: 0.75rem;
+
+  .headerActions,
+  .navbar,
+  .tabsContainer {
+    display: none;
   }
-  
-  .actionButton {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    background-color: #000;
-    border: 2px solid #333;
-    color: #e5b80b;
-    font-family: var(--font-pixel), monospace;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-  
-  .actionButton:hover {
-    background-color: #111;
-    border-color: #e5b80b;
-  }
-  
+
   .filtersPanel {
-    background-color: #1e1e1e;
-    border: 2px solid #333;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    overflow: hidden;
+    display: none;
   }
-  
-  .filterRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .filterRow:last-child {
-    margin-bottom: 0;
-  }
-  
-  .filterGroup {
-    flex: 1;
-    min-width: 200px;
-  }
-  
-  .filterGroup label {
-    display: block;
-    font-size: 0.8rem;
-    color: #aaa;
-    margin-bottom: 0.5rem;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .buttonGroup {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .filterButton {
-    flex: 1;
-    padding: 0.5rem;
-    background-color: #252525;
-    border: 2px solid #333;
-    color: #aaa;
-    font-family: var(--font-pixel), monospace;
-    font-size: 0.7rem;
-    cursor: pointer;
-  }
-  
-  .filterButton.active {
-    background-color: #000;
-    border-color: #e5b80b;
-    color: #e5b80b;
-  }
-  
-  .select,
-  .input {
-    width: 100%;
-    padding: 0.5rem;
-    background-color: #252525;
-    border: 2px solid #333;
-    color: #f0f0f0;
-    font-family: var(--font-pixel), monospace;
-    font-size: 0.8rem;
-  }
-  
-  .select:focus,
-  .input:focus {
-    outline: none;
-    border-color: #e5b80b;
-  }
-  
-  .searchBar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0 0.5rem;
-    background-color: #252525;
-    border: 2px solid #333;
-  }
-  
-  .searchInput {
-    flex: 1;
-    padding: 0.5rem;
-    background: none;
-    border: none;
-    color: #f0f0f0;
-    font-family: var(--font-pixel), monospace;
-    font-size: 0.8rem;
-  }
-  
-  .searchInput:focus {
-    outline: none;
-  }
-  
+
   .summary {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem;
   }
-  
+
   .summaryCard {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background-color: #1e1e1e;
-    border: 2px solid #333;
+    background-color: white;
+    border: 1px solid #ccc;
   }
-  
+
   .summaryIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: #000;
-    border: 2px solid #e5b80b;
-    color: #e5b80b;
+    background-color: white;
+    border: 1px solid #333;
+    color: #333;
   }
-  
+
+  .summaryIcon.profit {
+    border-color: #4caf50;
+    color: #4caf50;
+  }
+
+  .summaryIcon.loss {
+    border-color: #f44336;
+    color: #f44336;
+  }
+
   .summaryContent h3 {
-    font-size: 0.8rem;
-    color: #aaa;
-    margin-bottom: 0.25rem;
-    font-family: var(--font-pixel), monospace;
+    color: #333;
   }
-  
+
   .summaryContent p {
-    font-size: 1.2rem;
-    color: #e5b80b;
-    font-family: var(--font-pixel), monospace;
+    color: #333;
   }
-  
-  .reportContent {
-    flex: 1;
+
+  .summaryContent p.profit {
+    color: #4caf50;
   }
-  
-  .entriesList {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    margin-bottom: 2rem;
+
+  .summaryContent p.loss {
+    color: #f44336;
   }
-  
-  .emptyState {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    color: #666;
-    text-align: center;
-    background-color: #1e1e1e;
-    border: 2px solid #333;
-    margin: 2rem 0;
-  }
-  
-  .emptyState p {
-    margin-top: 1rem;
-    font-size: 1.1rem;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .dateGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
+
   .dateHeader {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background-color: #1e1e1e;
-    border-left: 4px solid #e5b80b;
+    background-color: white;
+    border-left: 4px solid #333;
   }
-  
+
   .dateHeader h2 {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #e5b80b;
-    font-family: var(--font-pixel), monospace;
+    color: #333;
   }
-  
+
   .entryCard {
-    border: 2px solid #333;
-    overflow: hidden;
-    background-color: #1e1e1e;
-  }
-  
-  .entryCard:hover {
-    border-color: #444;
-    background-color: #252525;
-  }
-  
-  .entryHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    cursor: pointer;
-  }
-  
-  .entryInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .entryTime {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .timeRange {
-    font-size: 0.9rem;
-    color: #f0f0f0;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .duration {
-    font-size: 0.8rem;
-    color: #aaa;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .entryJob {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .jobName {
-    font-size: 0.9rem;
-    color: #e5b80b;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .jobRate {
-    font-size: 0.8rem;
-    color: #aaa;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .entryEarnings {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-  }
-  
-  .earningsLabel {
-    font-size: 0.7rem;
-    color: #aaa;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .earningsValue {
-    font-size: 1.1rem;
-    color: #e5b80b;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .expandIcon {
-    margin-left: 1rem;
-    color: #aaa;
-  }
-  
-  .entryDetails {
-    padding: 0 1rem 1rem;
-    overflow: hidden;
-    background-color: #252525;
-    border-top: 1px solid #333;
-  }
-  
-  .breaksList {
-    margin-bottom: 1rem;
-  }
-  
-  .breaksList h4 {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #aaa;
-    margin-bottom: 0.75rem;
-    font-family: var(--font-pixel), monospace;
-  }
-  
-  .breakItem {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.75rem;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: white;
+    border: 1px solid #ccc;
     margin-bottom: 0.5rem;
-    font-size: 0.85rem;
-    font-family: var(--font-pixel), monospace;
   }
-  
+
+  .entryHeader {
+    background-color: #f5f5f5;
+  }
+
+  .timeRange,
+  .duration,
+  .jobName,
+  .jobRate,
+  .categoryName,
+  .expenseDescription,
+  .billableStatus {
+    color: #333;
+  }
+
+  .earningsValue {
+    color: #333;
+  }
+
+  .expandIcon {
+    display: none;
+  }
+
+  .entryDetails {
+    display: block !important;
+    height: auto !important;
+    opacity: 1 !important;
+    background-color: white;
+    border-top: 1px solid #ccc;
+  }
+
+  .breakItem {
+    background-color: white;
+    border: 1px solid #ccc;
+  }
+
   .entryCalculation {
-    background-color: #1e1e1e;
-    border: 1px solid #333;
-    padding: 0.75rem;
+    background-color: white;
+    border: 1px solid #ccc;
   }
-  
-  .calculationRow {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #333;
-    font-family: var(--font-pixel), monospace;
-    font-size: 0.85rem;
-  }
-  
+
   .calculationRow:last-child {
-    border-bottom: none;
+    color: #333;
     font-weight: bold;
-    color: #e5b80b;
   }
-  
-  /* Print styles */
-  @media print {
-    .container {
-      background-color: white;
-      color: black;
-      padding: 0;
-    }
-  
-    .header {
-      padding: 1rem;
-      border-bottom: 2px solid #333;
-    }
-  
-    .header h1 {
-      color: black;
-    }
-  
-    .headerActions,
-    .navbar {
-      display: none;
-    }
-  
-    .filtersPanel {
-      display: none;
-    }
-  
-    .summary {
-      padding: 1rem;
-    }
-  
-    .summaryCard {
-      background-color: white;
-      border: 1px solid #ccc;
-    }
-  
-    .summaryIcon {
-      background-color: white;
-      border: 1px solid #333;
-      color: #333;
-    }
-  
-    .summaryContent h3 {
-      color: #333;
-    }
-  
-    .summaryContent p {
-      color: #333;
-    }
-  
-    .dateHeader {
-      background-color: white;
-      border-left: 4px solid #333;
-    }
-  
-    .dateHeader h2 {
-      color: #333;
-    }
-  
-    .entryCard {
-      background-color: white;
-      border: 1px solid #ccc;
-      margin-bottom: 0.5rem;
-    }
-  
-    .entryHeader {
-      background-color: #f5f5f5;
-    }
-  
-    .timeRange,
-    .duration,
-    .jobName,
-    .jobRate {
-      color: #333;
-    }
-  
-    .earningsValue {
-      color: #333;
-    }
-  
-    .expandIcon {
-      display: none;
-    }
-  
-    .entryDetails {
-      display: block !important;
-      height: auto !important;
-      opacity: 1 !important;
-      background-color: white;
-      border-top: 1px solid #ccc;
-    }
-  
-    .breakItem {
-      background-color: white;
-      border: 1px solid #ccc;
-    }
-  
-    .entryCalculation {
-      background-color: white;
-      border: 1px solid #ccc;
-    }
-  
-    .calculationRow:last-child {
-      color: #333;
-      font-weight: bold;
-    }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .headerActions {
+    flex-wrap: wrap;
   }
-  
-  /* Responsive styles */
-  @media (max-width: 768px) {
-    .headerActions {
-      flex-wrap: wrap;
-    }
-  
-    .summary {
-      flex-direction: column;
-    }
-  
-    .entryHeader {
-      flex-wrap: wrap;
-    }
-  
-    .entryInfo {
-      width: 100%;
-      margin-bottom: 0.5rem;
-    }
-  
-    .entryEarnings {
-      width: 100%;
-      align-items: flex-start;
-    }
-  
-    .expandIcon {
-      position: absolute;
-      right: 1rem;
-      top: 1rem;
-    }
+
+  .summary {
+    flex-direction: column;
   }
-  
+
+  .entryHeader {
+    flex-wrap: wrap;
+  }
+
+  .entryInfo {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .entryEarnings {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .expandIcon {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+  }
+}
