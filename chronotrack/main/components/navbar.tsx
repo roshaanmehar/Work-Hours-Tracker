@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, Calendar, BarChart2, Settings, Shield, DollarSign } from "lucide-react"
+import { Clock, Calendar, BarChart2, Settings, Shield, DollarSign, FileText } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import styles from "./navbar.module.css"
@@ -8,7 +8,7 @@ import styles from "./navbar.module.css"
 export default function Navbar({
   activePage,
 }: {
-  activePage: "track" | "history" | "analytics" | "settings" | "admin" | "expenses"
+  activePage: "track" | "history" | "analytics" | "settings" | "admin" | "expenses" | "reports"
 }) {
   const pathname = usePathname()
   const isAdmin = true // This would be determined by authentication in a real app
@@ -28,7 +28,9 @@ export default function Navbar({
               ? "admin"
               : pathname === "/expenses"
                 ? "expenses"
-                : "track")
+                : pathname === "/reports"
+                  ? "reports"
+                  : "track")
 
   return (
     <nav className={styles.navbar}>
@@ -43,6 +45,14 @@ export default function Navbar({
       >
         <Calendar size={22} />
         <span>History</span>
+      </Link>
+      <Link
+        href="/reports"
+        className={`${styles.navItem} ${currentPage === "reports" ? styles.active : ""}`}
+        prefetch={true}
+      >
+        <FileText size={22} />
+        <span>Reports</span>
       </Link>
       <Link
         href="/expenses"
