@@ -4,6 +4,7 @@ import { Press_Start_2P } from "next/font/google"
 import { AuthProvider } from "@/context/auth-context"
 import AuthCheck from "@/components/auth-check"
 import "./globals.css"
+import Preload from "@/components/preload"
 
 // Initialize the Press Start 2P font
 const pixelFont = Press_Start_2P({
@@ -27,7 +28,10 @@ export default function RootLayout({
     <html lang="en" className={pixelFont.variable}>
       <body>
         <AuthProvider>
-          <AuthCheck>{children}</AuthCheck>
+          <AuthCheck>
+            {children}
+            <Preload />
+          </AuthCheck>
           <div className="scanlines"></div>
         </AuthProvider>
       </body>
