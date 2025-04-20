@@ -38,11 +38,7 @@ const nextConfig = {
   // Enable static page generation where possible
   experimental: {
     // This helps with precompilation
-    optimizeCss: true,
-    // Optimize for faster builds
-    turbotrace: {
-      logLevel: 'error'
-    }
+    optimizeCss: true
   }
 };
 
