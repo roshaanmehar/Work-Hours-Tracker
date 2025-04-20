@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, DollarSign, Calendar, Tag, FileText, X, Edit, Trash2 } from "lucide-react"
 import Navbar from "@/components/navbar"
@@ -56,7 +56,7 @@ const availableJobs = [
 const expenseCategories = ["Software", "Hardware", "Office Supplies", "Meals", "Travel", "Materials", "Other"]
 
 export default function ExpensesPage() {
-  const { authenticated, setAuthenticated } = useAuth()
+  const { authenticated, setAuthenticated, resetSessionTimeout } = useAuth()
   const [expenses, setExpenses] = useState(initialExpenses)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [editingExpense, setEditingExpense] = useState<number | null>(null)
@@ -71,6 +71,13 @@ export default function ExpensesPage() {
     category: expenseCategories[0],
     job: availableJobs[0].name,
   })
+
+  // Call resetSessionTimeout only once when the component mounts
+  useEffect(() => {
+    if (authenticated) {
+      resetSessionTimeout()
+    }
+  }, [authenticated, resetSessionTimeout])
 
   const handleAddExpense = () => {
     setShowAddExpense(true)
