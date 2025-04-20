@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, Calendar, BarChart2, Settings, Shield, DollarSign, FileText } from "lucide-react"
+import { Clock, Calendar, BarChart2, Shield, DollarSign, FileText } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import styles from "./navbar.module.css"
@@ -8,7 +8,7 @@ import styles from "./navbar.module.css"
 export default function Navbar({
   activePage,
 }: {
-  activePage: "track" | "history" | "analytics" | "settings" | "admin" | "expenses" | "reports"
+  activePage: "track" | "history" | "analytics" | "admin" | "expenses" | "reports"
 }) {
   const pathname = usePathname()
   const isAdmin = true // This would be determined by authentication in a real app
@@ -22,15 +22,13 @@ export default function Navbar({
         ? "history"
         : pathname === "/analytics"
           ? "analytics"
-          : pathname === "/settings"
-            ? "settings"
-            : pathname === "/admin"
-              ? "admin"
-              : pathname === "/expenses"
-                ? "expenses"
-                : pathname === "/reports"
-                  ? "reports"
-                  : "track")
+          : pathname === "/admin"
+            ? "admin"
+            : pathname === "/expenses"
+              ? "expenses"
+              : pathname === "/reports"
+                ? "reports"
+                : "track")
 
   return (
     <nav className={styles.navbar}>
@@ -70,15 +68,6 @@ export default function Navbar({
         <BarChart2 size={22} />
         <span>Stats</span>
       </Link>
-      <Link
-        href="/settings"
-        className={`${styles.navItem} ${currentPage === "settings" ? styles.active : ""}`}
-        prefetch={true}
-      >
-        <Settings size={22} />
-        <span>Settings</span>
-      </Link>
-
       {isAdmin && (
         <Link
           href="/admin"

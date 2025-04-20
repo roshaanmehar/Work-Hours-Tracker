@@ -6,7 +6,6 @@ import { Play, Square, Coffee, RotateCcw, Clock } from "lucide-react"
 import Navbar from "@/components/navbar"
 import PinLogin from "@/components/pin-login"
 import { useAuth } from "@/context/auth-context"
-import { useSound } from "use-sound"
 import styles from "./page.module.css"
 
 type TrackingState = "idle" | "tracking" | "break"
@@ -32,12 +31,6 @@ export default function Home() {
     { id: 2, name: "Design Work", rate: 45 },
     { id: 3, name: "Client Meeting", rate: 60 },
   ])
-
-  // Sound effects
-  const [playClockIn] = useSound("/sounds/clock-in.mp3", { volume: 0.5 })
-  const [playClockOut] = useSound("/sounds/clock-out.mp3", { volume: 0.5 })
-  const [playBreak] = useSound("/sounds/break.mp3", { volume: 0.5 })
-  const [playResume] = useSound("/sounds/resume.mp3", { volume: 0.5 })
 
   // Format time as HH:MM:SS
   const formatTime = (milliseconds: number) => {
@@ -109,7 +102,6 @@ export default function Home() {
       totalBreakTime: 0,
       selectedJob: suggestedJob.name,
     })
-    playClockIn()
   }
 
   const handleClockOut = () => {
@@ -121,7 +113,6 @@ export default function Home() {
       selectedJob: "Default Job",
     })
     setElapsedTime("00:00:00")
-    playClockOut()
   }
 
   const handleBreak = () => {
@@ -130,7 +121,6 @@ export default function Home() {
       ...currentSession,
       breakStartTime: new Date(),
     })
-    playBreak()
   }
 
   const handleResumeWork = () => {
@@ -145,7 +135,6 @@ export default function Home() {
       breakStartTime: null,
       totalBreakTime: currentSession.totalBreakTime + breakDuration,
     })
-    playResume()
   }
 
   // Split time into digits for animation
