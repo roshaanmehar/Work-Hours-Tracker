@@ -4,12 +4,12 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { Lock, X } from "lucide-react"
+import { Lock, X } from 'lucide-react'
 import { useAuth } from "@/context/auth-context"
 import styles from "./pin-login.module.css"
 
 export default function PinLogin() {
-  const { setAuthenticated } = useAuth()
+  const { login } = useAuth()
   const [pin, setPin] = useState<string[]>(["", "", "", ""])
   const [error, setError] = useState("")
   const [attempts, setAttempts] = useState(0)
@@ -17,8 +17,6 @@ export default function PinLogin() {
   const [lockTimer, setLockTimer] = useState(0)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  // Mock PIN for demo purposes - in real app, this would be verified against a hashed value in the database
-  const CORRECT_PIN = ["2", "2", "1", "6"]
   const MAX_ATTEMPTS = 3
   const LOCK_DURATION = 30 // seconds
 
@@ -83,13 +81,12 @@ export default function PinLogin() {
     }
   }
 
-  const verifyPin = (pinArray: string[]) => {
-    // In a real app, this would make an API call to verify the PIN
-    const isCorrect = pinArray.join("") === CORRECT_PIN.join("")
+  const verifyPin = async (pinArray: string[]) => {
+    const pinString = pinArray.join("")
+    const isCorrect = await login(pinString)
 
     if (isCorrect) {
       setError("")
-      setAuthenticated(true)
     } else {
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
@@ -164,7 +161,9 @@ export default function PinLogin() {
           <span>Clear</span>
         </button>
 
-        <div></div>
+        <div className={styles.adminLink}>
+          <a href="/admin">Admin Login</a>
+        </div>
       </div>
     </div>
   )
