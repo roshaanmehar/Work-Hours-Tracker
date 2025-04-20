@@ -156,7 +156,6 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showDeleted, setShowDeleted] = useState(true)
   const [adminAuthenticated, setAdminAuthenticated] = useState(false)
-  const [showAdminLogin, setShowAdminLogin] = useState(false)
   const [activeTab, setActiveTab] = useState("records")
 
   // Settings state
@@ -204,7 +203,6 @@ export default function AdminPage() {
 
   const handleAdminLogin = () => {
     setAdminAuthenticated(true)
-    setShowAdminLogin(false)
   }
 
   const handleSync = () => {
@@ -376,17 +374,8 @@ export default function AdminPage() {
           <AlertTriangle size={48} />
           <h2>Admin Authentication Required</h2>
           <p>You need to authenticate as an administrator to access this page.</p>
-          <motion.button
-            className={styles.adminButton}
-            onClick={() => setShowAdminLogin(true)}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Settings size={20} />
-            Authenticate as Admin
-          </motion.button>
+          <AdminLogin onSuccess={handleAdminLogin} onCancel={() => {}} />
         </div>
-
-        {showAdminLogin && <AdminLogin onSuccess={handleAdminLogin} onCancel={() => setShowAdminLogin(false)} />}
 
         <Navbar activePage="admin" />
       </div>
