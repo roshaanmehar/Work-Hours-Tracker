@@ -5,13 +5,11 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { Lock, X } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
 import styles from "./pin-login.module.css"
 
-interface PinLoginProps {
-  onSuccess: () => void
-}
-
-export default function PinLogin({ onSuccess }: PinLoginProps) {
+export default function PinLogin() {
+  const { setAuthenticated } = useAuth()
   const [pin, setPin] = useState<string[]>(["", "", "", ""])
   const [error, setError] = useState("")
   const [attempts, setAttempts] = useState(0)
@@ -91,7 +89,7 @@ export default function PinLogin({ onSuccess }: PinLoginProps) {
 
     if (isCorrect) {
       setError("")
-      onSuccess()
+      setAuthenticated(true)
     } else {
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
