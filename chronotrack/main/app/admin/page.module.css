@@ -10,8 +10,8 @@
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
   margin-bottom: 1.5rem;
   padding-top: 1rem;
 }
@@ -20,11 +20,45 @@
   font-size: 1.75rem;
   font-weight: 600;
   color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.tabsContainer {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #1e1e1e;
+  border: 2px solid #333;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  background-color: #252525;
+  color: #e5b80b;
+}
+
+.activeTab {
+  background-color: #000;
+  border-color: #e5b80b;
+  color: #e5b80b;
 }
 
 .headerActions {
   display: flex;
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .toggleButton,
@@ -33,7 +67,6 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
   background-color: #1e1e1e;
   border: 1px solid #333;
   color: #e5b80b;
@@ -288,4 +321,381 @@
   border-radius: 8px;
   margin-bottom: 0.5rem;
   font-size: 0.85rem;
+}
+
+/* Admin login required message */
+.adminLoginRequired {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 3rem 1rem;
+  background-color: #1e1e1e;
+  border: 4px solid #333;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.adminLoginRequired h2 {
+  font-size: 1.5rem;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.adminLoginRequired p {
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.adminButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #000;
+  border: 2px solid #e5b80b;
+  color: #e5b80b;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-pixel), monospace;
+}
+
+.adminButton:hover {
+  background-color: #111;
+}
+
+/* Settings styles */
+.settingsContainer,
+.jobsContainer,
+.auditContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settingsSection {
+  background-color: #1e1e1e;
+  border: 2px solid #333;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: #e5b80b;
+}
+
+.sectionHeader h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0;
+  border: 2px solid #333;
+  background-color: #252525;
+  font-size: 0.9rem;
+  color: #f0f0f0;
+  transition: border-color 0.2s ease;
+  font-family: var(--font-pixel), monospace;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #e5b80b;
+}
+
+.syncStatus {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+  background-color: #252525;
+  border: 2px solid #333;
+  color: #f0f0f0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-pixel), monospace;
+}
+
+.button:hover:not(:disabled) {
+  background-color: #333;
+  border-color: #e5b80b;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.saveButtonContainer {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.saveButton {
+  width: 100%;
+  background-color: #000;
+  color: #e5b80b;
+  border: 2px solid #e5b80b;
+  font-weight: 500;
+  padding: 1rem;
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: #111;
+}
+
+/* Job management styles */
+.jobList,
+.rulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.jobItem,
+.ruleItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #252525;
+  border: 1px solid #333;
+}
+
+.jobDetails,
+.ruleDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.jobName,
+.ruleJob {
+  font-weight: 500;
+  color: #f0f0f0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.jobRate,
+.ruleDays {
+  font-size: 0.8rem;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.jobActions,
+.ruleActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.smallButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #333;
+  border: 1px solid #444;
+  color: #aaa;
+  font-size: 0.7rem;
+  cursor: pointer;
+  font-family: var(--font-pixel), monospace;
+}
+
+.smallButton:hover {
+  background-color: #444;
+  color: #e5b80b;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #000;
+  border: 2px solid #e5b80b;
+  color: #e5b80b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: var(--font-pixel), monospace;
+  margin-left: auto;
+}
+
+.addButton:hover {
+  background-color: #111;
+}
+
+.jobForm,
+.ruleForm {
+  background-color: #252525;
+  border: 1px solid #333;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.jobForm h3,
+.ruleForm h3 {
+  font-size: 1rem;
+  color: #e5b80b;
+  margin-bottom: 1rem;
+  font-family: var(--font-pixel), monospace;
+}
+
+.formActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancelButton,
+.saveButton {
+  flex: 1;
+  padding: 0.75rem;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.cancelButton {
+  background-color: #333;
+  border: 2px solid #444;
+  color: #aaa;
+}
+
+.cancelButton:hover {
+  background-color: #444;
+}
+
+.saveButton {
+  background-color: #000;
+  border: 2px solid #e5b80b;
+  color: #e5b80b;
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: #111;
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Audit log styles */
+.auditLog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 500px;
+  overflow-y: auto;
+  margin-bottom: 1.5rem;
+}
+
+.logEntry {
+  background-color: #252525;
+  border: 1px solid #333;
+  padding: 1rem;
+}
+
+.logHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.logTime {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.logUser {
+  font-size: 0.8rem;
+  color: #e5b80b;
+  font-family: var(--font-pixel), monospace;
+}
+
+.logContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.logAction {
+  font-size: 0.9rem;
+  color: #f0f0f0;
+  font-weight: 500;
+  font-family: var(--font-pixel), monospace;
+}
+
+.logDetails {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-family: var(--font-pixel), monospace;
+}
+
+.auditActions {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tabsContainer {
+    width: auto;
+  }
+
+  .buttonGroup {
+    flex-direction: row;
+  }
 }
