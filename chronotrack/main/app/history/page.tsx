@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Clock, Calendar } from "lucide-react"
 import Navbar from "@/components/navbar"
 import styles from "./page.module.css"
+import { useAuth } from "@/context/auth-context"
 
 // Mock data - would be fetched from backend in real implementation
 // Modified to show only final records without modification indicators
@@ -52,6 +53,13 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState("all")
   const [showFilterMenu, setShowFilterMenu] = useState(false)
   const [dateRange, setDateRange] = useState("week")
+
+  const { resetSessionTimeout } = useAuth()
+
+  // Call resetSessionTimeout only once when the component mounts
+  useEffect(() => {
+    resetSessionTimeout()
+  }, [resetSessionTimeout]) // resetSessionTimeout is now memoized, so this is safe
 
   const toggleExpand = (id: number) => {
     setExpandedEntry(expandedEntry === id ? null : id)
