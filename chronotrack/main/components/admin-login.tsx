@@ -3,7 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Shield } from "lucide-react"
+import { motion } from "framer-motion"
+import { Shield, X } from "lucide-react"
 import styles from "./admin-login.module.css"
 
 interface AdminLoginProps {
@@ -21,7 +22,7 @@ export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
 
   // Mock credentials for demo purposes
   const CORRECT_USERNAME = "admin"
-  const CORRECT_PASSWORD = "admin123"
+  const CORRECT_PASSWORD = "password"
   const MAX_ATTEMPTS = 3
   const LOCK_DURATION = 60 // seconds
 
@@ -62,56 +63,68 @@ export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
   }
 
   return (
-    <div className={styles.form}>
-      <div className={styles.formHeader}>
-        <Shield size={18} />
-        <h2>Admin Authentication</h2>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label htmlFor="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={locked}
-            className={styles.input}
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={locked}
-            className={styles.input}
-          />
-        </div>
-
-        {error && <div className={styles.error}>{error}</div>}
-
-        {locked && (
-          <div className={styles.lockedMessage}>
-            Locked for <span className={styles.timer}>{lockTimer}</span> seconds
+    <div className={styles.overlay}>
+      <motion.div
+        className={styles.modal}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+      >
+        <div className={styles.modalHeader}>
+          <div className={styles.modalTitle}>
+            <Shield size={18} />
+            <h2>Admin Authentication</h2>
           </div>
-        )}
-
-        <div className={styles.formActions}>
-          <button type="button" className={styles.cancelButton} onClick={onCancel}>
-            Cancel
-          </button>
-          <button type="submit" className={styles.loginButton} disabled={locked || !username || !password}>
-            Login
+          <button className={styles.closeButton} onClick={onCancel}>
+            <X size={18} />
           </button>
         </div>
 
-        <div className={styles.hint}>Demo credentials: admin / admin123</div>
-      </form>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={locked}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={locked}
+              className={styles.input}
+            />
+          </div>
+
+          {error && <div className={styles.error}>{error}</div>}
+
+          {locked && (
+            <div className={styles.lockedMessage}>
+              Locked for <span className={styles.timer}>{lockTimer}</span> seconds
+            </div>
+          )}
+
+          <div className={styles.formActions}>
+            <button type="button" className={styles.cancelButton} onClick={onCancel}>
+              Cancel
+            </button>
+            <button type="submit" className={styles.loginButton} disabled={locked || !username || !password}>
+              Login
+            </button>
+          </div>
+
+          <div className={styles.hint}>Demo credentials: admin / password</div>
+        </form>
+      </motion.div>
     </div>
   )
 }
