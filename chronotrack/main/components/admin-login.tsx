@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Shield, X } from "lucide-react"
+import { useVerifyAdminCredentials } from "@/hooks/use-data"
 import styles from "./admin-login.module.css"
 
 interface AdminLoginProps {
@@ -13,6 +14,7 @@ interface AdminLoginProps {
 }
 
 export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
+  const { verify, isLoading } = useVerifyAdminCredentials()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -20,19 +22,17 @@ export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
   const [locked, setLocked] = useState(false)
   const [lockTimer, setLockTimer] = useState(0)
 
-  // Mock credentials for demo purposes
-  const CORRECT_USERNAME = "admin"
-  const CORRECT_PASSWORD = "password"
   const MAX_ATTEMPTS = 3
   const LOCK_DURATION = 60 // seconds
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (locked) return
+    if (locked || isLoading) return
 
-    // In a real app, this would make an API call to verify the credentials
-    if (username === CORRECT_USERNAME && password === CORRECT_PASSWORD) {
+    const isCorrect = await verify(username, password)
+
+    if (isCorrect) {
       setError("")
       onSuccess()
     } else {
@@ -89,7 +89,7 @@ export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              disabled={locked}
+              disabled={locked || isLoading}
               className={styles.input}
               autoFocus
             />
@@ -102,7 +102,7 @@ export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={locked}
+              disabled={locked || isLoading}
               className={styles.input}
             />
           </div>
@@ -119,8 +119,12 @@ export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
             <button type="button" className={styles.cancelButton} onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" className={styles.loginButton} disabled={locked || !username || !password}>
-              Login
+            <button
+              type="submit"
+              className={styles.loginButton}
+              disabled={locked || isLoading || !username || !password}
+            >
+              {isLoading ? "Logging in..." : "Login"}
             </button>
           </div>
 
