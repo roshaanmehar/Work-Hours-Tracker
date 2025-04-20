@@ -12,7 +12,7 @@ import styles from "./page.module.css"
 type TrackingState = "idle" | "tracking" | "break"
 
 export default function Home() {
-  const { authenticated } = useAuth()
+  const { authenticated, resetSessionTimeout } = useAuth()
   const [state, setState] = useState<TrackingState>("idle")
   const [currentSession, setCurrentSession] = useState<{
     startTime: Date | null
@@ -75,6 +75,13 @@ export default function Home() {
 
     return () => clearInterval(intervalId)
   }, [state, currentSession])
+
+  // Call resetSessionTimeout only once when the component mounts
+  useEffect(() => {
+    if (authenticated) {
+      resetSessionTimeout()
+    }
+  }, [authenticated, resetSessionTimeout]) // resetSessionTimeout is now memoized, so this is safe
 
   // Get suggested job based on day and time
   const getSuggestedJob = () => {
