@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+// Import only the specific icons you need
 import { Play, Square, Coffee, RotateCcw, Clock } from "lucide-react"
 import Navbar from "@/components/navbar"
 import PinLogin from "@/components/pin-login"
