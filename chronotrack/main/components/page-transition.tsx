@@ -16,18 +16,16 @@ export default function PageTransition({ children }: { children: React.ReactNode
 
   // Update children when route changes
   useEffect(() => {
-    // Only show loading for actual page changes, not initial load
-    if (key !== pathname) {
+    // Skip animation on initial load
+    if (key !== pathname && pathname !== "/") {
       setIsLoading(true)
 
-      // Very short timeout to allow for quick animation
-      const timer = setTimeout(() => {
+      // Use requestAnimationFrame for smoother transitions
+      requestAnimationFrame(() => {
         setDisplayChildren(children)
         setKey(pathname)
         setIsLoading(false)
-      }, 100) // Reduced from 300ms to 100ms for faster transitions
-
-      return () => clearTimeout(timer)
+      })
     } else {
       // Immediately update children on initial load
       setDisplayChildren(children)
