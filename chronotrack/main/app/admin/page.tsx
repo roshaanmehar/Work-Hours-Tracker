@@ -176,7 +176,11 @@ export default function AdminPage() {
   // Job rules state
   const [jobRules, setJobRules] = useState(defaultJobRules)
   const [editingRule, setEditingRule] = useState<number | null>(null)
-  const [newRule, setNewRule] = useState({ days: "Monday-Friday", timeRange: "9:00-17:00", job: "Web Development" })
+  const [newRule, setNewRule] = useState({
+    days: "Monday-Friday",
+    timeRange: "9:00-17:00",
+    job: "Web Development",
+  })
   const [showAddRule, setShowAddRule] = useState(false)
 
   // Initialize admin authentication state
@@ -254,37 +258,74 @@ export default function AdminPage() {
     // In a real app, this would be handled by the backend
   }
 
+  // Add this validation function before the handleAddRule function
+  const validateTimeRange = (timeRange) => {
+    // Check format using regex
+    const regex = /^\d{1,2}:\d{2}-\d{1,2}:\d{2}$/
+    if (!regex.test(timeRange)) {
+      return false
+    }
+
+    // Parse and validate the times
+    try {
+      const [start, end] = timeRange.split("-")
+      const [startHours, startMinutes] = start.split(":").map(Number)
+      const [endHours, endMinutes] = end.split(":").map(Number)
+
+      // Validate hours and minutes
+      if (
+        startHours < 0 ||
+        startHours > 23 ||
+        endHours < 0 ||
+        endHours > 23 ||
+        startMinutes < 0 ||
+        startMinutes > 59 ||
+        endMinutes < 0 ||
+        endMinutes > 59
+      ) {
+        return false
+      }
+
+      // Ensure end time is after start time
+      const startTime = startHours + startMinutes / 60
+      const endTime = endHours + endMinutes / 60
+
+      return endTime > startTime
+    } catch (e) {
+      return false
+    }
+  }
+
+  // Update the handleAddRule function to validate the time range
   const handleAddRule = () => {
     if (!newRule.days || !newRule.timeRange || !newRule.job) return
+
+    // Validate time range format
+    if (!validateTimeRange(newRule.timeRange)) {
+      alert("Please enter a valid time range in the format HH:MM-HH:MM using 24-hour time.")
+      return
+    }
 
     const newId = Math.max(0, ...jobRules.map((rule) => rule.id)) + 1
     setJobRules([...jobRules, { id: newId, ...newRule }])
     setNewRule({ days: "Monday-Friday", timeRange: "9:00-17:00", job: "Web Development" })
     setShowAddRule(false)
-
-    // Add to audit log
-    // In a real app, this would be handled by the backend
   }
 
-  const handleEditRule = (id: number) => {
-    const rule = jobRules.find((r) => r.id === id)
-    if (!rule) return
-
-    setNewRule({ days: rule.days, timeRange: rule.timeRange, job: rule.job })
-    setEditingRule(id)
-    setShowAddRule(true)
-  }
-
+  // Similarly update the handleUpdateRule function
   const handleUpdateRule = () => {
     if (!editingRule || !newRule.days || !newRule.timeRange || !newRule.job) return
+
+    // Validate time range format
+    if (!validateTimeRange(newRule.timeRange)) {
+      alert("Please enter a valid time range in the format HH:MM-HH:MM using 24-hour time.")
+      return
+    }
 
     setJobRules(jobRules.map((rule) => (rule.id === editingRule ? { ...rule, ...newRule } : rule)))
     setNewRule({ days: "Monday-Friday", timeRange: "9:00-17:00", job: "Web Development" })
     setEditingRule(null)
     setShowAddRule(false)
-
-    // Add to audit log
-    // In a real app, this would be handled by the backend
   }
 
   const handleDeleteRule = (id: number) => {
@@ -824,12 +865,12 @@ export default function AdminPage() {
                 <div key={rule.id} className={styles.ruleItem}>
                   <div className={styles.ruleDetails}>
                     <span className={styles.ruleDays}>
-                      {rule.days}, {rule.timeRange}
+                      <strong>{rule.days}</strong> • {rule.timeRange}
                     </span>
                     <span className={styles.ruleJob}>{rule.job}</span>
                   </div>
                   <div className={styles.ruleActions}>
-                    <button className={styles.smallButton} onClick={() => handleEditRule(rule.id)}>
+                    <button className={styles.smallButton} onClick={() => setEditingRule(rule.id)}>
                       <Edit size={14} />
                     </button>
                     <button className={styles.smallButton} onClick={() => handleDeleteRule(rule.id)}>
@@ -851,7 +892,8 @@ export default function AdminPage() {
                     value={newRule.days}
                     onChange={(e) => setNewRule({ ...newRule, days: e.target.value })}
                   >
-                    <option value="Monday-Friday">Monday-Friday</option>
+                    <option value="Monday-Friday">Monday-Friday (Weekdays)</option>
+                    <option value="Saturday,Sunday">Saturday,Sunday (Weekends)</option>
                     <option value="Monday">Monday</option>
                     <option value="Tuesday">Tuesday</option>
                     <option value="Wednesday">Wednesday</option>
@@ -859,11 +901,12 @@ export default function AdminPage() {
                     <option value="Friday">Friday</option>
                     <option value="Saturday">Saturday</option>
                     <option value="Sunday">Sunday</option>
-                    <option value="Weekends">Weekends</option>
+                    <option value="Monday,Wednesday,Friday">Monday,Wednesday,Friday</option>
+                    <option value="Tuesday,Thursday">Tuesday,Thursday</option>
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label htmlFor="ruleTimeRange">Time Range</label>
+                  <label htmlFor="ruleTimeRange">Time Range (24h format)</label>
                   <input
                     type="text"
                     id="ruleTimeRange"
@@ -871,7 +914,12 @@ export default function AdminPage() {
                     value={newRule.timeRange}
                     onChange={(e) => setNewRule({ ...newRule, timeRange: e.target.value })}
                     placeholder="9:00-17:00"
+                    pattern="\d{1,2}:\d{2}-\d{1,2}:\d{2}"
+                    title="Format: HH:MM-HH:MM (24-hour)"
                   />
+                  <small style={{ color: "#aaa", marginTop: "0.25rem", display: "block", fontSize: "0.7rem" }}>
+                    Format: HH:MM-HH:MM using 24-hour time (e.g., 9:00-17:00)
+                  </small>
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="ruleJob">Default Job</label>
