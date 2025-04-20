@@ -6,10 +6,12 @@ import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { Lock, X } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
+import { useVerifyPin } from "@/hooks/use-data"
 import styles from "./pin-login.module.css"
 
 export default function PinLogin() {
   const { setAuthenticated } = useAuth()
+  const { verify, isLoading } = useVerifyPin()
   const [pin, setPin] = useState<string[]>(["", "", "", ""])
   const [error, setError] = useState("")
   const [attempts, setAttempts] = useState(0)
@@ -17,8 +19,6 @@ export default function PinLogin() {
   const [lockTimer, setLockTimer] = useState(0)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  // Mock PIN for demo purposes - in real app, this would be verified against a hashed value in the database
-  const CORRECT_PIN = ["2", "2", "1", "6"]
   const MAX_ATTEMPTS = 3
   const LOCK_DURATION = 30 // seconds
 
@@ -83,9 +83,11 @@ export default function PinLogin() {
     }
   }
 
-  const verifyPin = (pinArray: string[]) => {
-    // In a real app, this would make an API call to verify the PIN
-    const isCorrect = pinArray.join("") === CORRECT_PIN.join("")
+  const verifyPin = async (pinArray: string[]) => {
+    if (isLoading) return
+
+    const pinString = pinArray.join("")
+    const isCorrect = await verify(pinString)
 
     if (isCorrect) {
       setError("")
@@ -137,7 +139,7 @@ export default function PinLogin() {
               value={digit}
               onChange={(e) => handlePinChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              disabled={locked}
+              disabled={locked || isLoading}
               className={styles.pinInput}
             />
           ))}
@@ -158,13 +160,11 @@ export default function PinLogin() {
         <button
           className={styles.clearButton}
           onClick={clearPin}
-          disabled={locked || pin.every((digit) => digit === "")}
+          disabled={locked || isLoading || pin.every((digit) => digit === "")}
         >
           <X size={16} />
           <span>Clear</span>
         </button>
-
-        <div></div>
       </div>
     </div>
   )
