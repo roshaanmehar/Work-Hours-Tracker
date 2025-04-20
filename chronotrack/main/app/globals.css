@@ -26,6 +26,14 @@ button {
   font-family: inherit;
 }
 
+/* Simple page transition */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 0.1s;
+  }
+}
+
 /* CRT effect */
 @keyframes flicker {
   0% {
