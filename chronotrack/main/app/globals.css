@@ -108,3 +108,8 @@ svg {
   pointer-events: none;
   opacity: 0.3;
 }
+
+/* Define the pixel font as a CSS variable for backward compatibility */
+:root {
+  --font-pixel: "Press Start 2P", monospace;
+}
