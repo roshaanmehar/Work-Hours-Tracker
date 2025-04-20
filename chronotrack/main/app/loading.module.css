@@ -1,0 +1,56 @@
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: #666;
+    text-align: center;
+    background-color: #1e1e1e;
+    border: 2px solid #333;
+    margin: 2rem 0;
+  }
+  
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(229, 184, 11, 0.2);
+    border-radius: 50%;
+    border-top-color: #e5b80b;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .errorState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: #e63946;
+    text-align: center;
+    background-color: #1e1e1e;
+    border: 2px solid #333;
+    margin: 2rem 0;
+  }
+  
+  .retryButton {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #1e1e1e;
+    border: 2px solid #e5b80b;
+    color: #e5b80b;
+    font-family: var(--font-pixel), monospace;
+    cursor: pointer;
+  }
+  
+  .retryButton:hover {
+    background-color: #252525;
+  }
+  
