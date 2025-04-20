@@ -2,11 +2,12 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, DollarSign, Calendar, Tag, FileText, X, Edit, Trash2 } from "lucide-react"
 import Navbar from "@/components/navbar"
 import PinLogin from "@/components/pin-login"
+import { useAuth } from "@/context/auth-context"
 import styles from "./page.module.css"
 
 // Mock data for expenses
@@ -55,7 +56,7 @@ const availableJobs = [
 const expenseCategories = ["Software", "Hardware", "Office Supplies", "Meals", "Travel", "Materials", "Other"]
 
 export default function ExpensesPage() {
-  const [authenticated, setAuthenticated] = useState(false)
+  const { authenticated, setAuthenticated } = useAuth()
   const [expenses, setExpenses] = useState(initialExpenses)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [editingExpense, setEditingExpense] = useState<number | null>(null)
@@ -71,28 +72,7 @@ export default function ExpensesPage() {
     job: availableJobs[0].name,
   })
 
-  // Session timeout
-  useEffect(() => {
-    if (!authenticated) return
-
-    const timeout = setTimeout(() => {
-      setAuthenticated(false)
-    }, 90 * 1000)
-
-    return () => clearTimeout(timeout)
-  }, [authenticated])
-
-  // Reset session timeout on user interaction
-  const resetSessionTimeout = () => {
-    setAuthenticated(true)
-  }
-
-  const handlePinSuccess = () => {
-    setAuthenticated(true)
-  }
-
   const handleAddExpense = () => {
-    resetSessionTimeout()
     setShowAddExpense(true)
     setEditingExpense(null)
     setNewExpense({
@@ -105,7 +85,6 @@ export default function ExpensesPage() {
   }
 
   const handleEditExpense = (id: number) => {
-    resetSessionTimeout()
     const expense = expenses.find((e) => e.id === id)
     if (!expense) return
 
@@ -122,13 +101,11 @@ export default function ExpensesPage() {
   }
 
   const handleDeleteExpense = (id: number) => {
-    resetSessionTimeout()
     setExpenses(expenses.filter((expense) => expense.id !== id))
   }
 
   const handleSubmitExpense = (e: React.FormEvent) => {
     e.preventDefault()
-    resetSessionTimeout()
 
     if (!newExpense.amount || !newExpense.description) return
 
@@ -169,7 +146,6 @@ export default function ExpensesPage() {
   }
 
   const handleCancelExpense = () => {
-    resetSessionTimeout()
     setShowAddExpense(false)
     setEditingExpense(null)
   }
@@ -220,11 +196,11 @@ export default function ExpensesPage() {
   const sortedDates = Object.keys(expensesByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 
   if (!authenticated) {
-    return <PinLogin onSuccess={handlePinSuccess} />
+    return <PinLogin />
   }
 
   return (
-    <div className={styles.container} onClick={resetSessionTimeout}>
+    <div className={styles.container}>
       <header className={styles.header}>
         <h1>Expenses</h1>
         <motion.button className={styles.addButton} onClick={handleAddExpense} whileTap={{ scale: 0.95 }}>
@@ -259,7 +235,7 @@ export default function ExpensesPage() {
       <div className={styles.summary}>
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Total Expenses:</span>
-          <span className={styles.summaryValue}>${totalExpenses.toFixed(2)}</span>
+          <span className={styles.summaryValue}>£{totalExpenses.toFixed(2)}</span>
         </div>
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Count:</span>
@@ -293,13 +269,13 @@ export default function ExpensesPage() {
                   key={expense.id}
                   className={styles.expenseCard}
                   layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <div className={styles.expenseDetails}>
                     <div className={styles.expenseMain}>
-                      <span className={styles.expenseAmount}>${expense.amount.toFixed(2)}</span>
+                      <span className={styles.expenseAmount}>£{expense.amount.toFixed(2)}</span>
                       <span className={styles.expenseDescription}>{expense.description}</span>
                     </div>
                     <div className={styles.expenseMeta}>
@@ -330,12 +306,14 @@ export default function ExpensesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
           >
             <motion.div
               className={styles.modal}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
             >
               <div className={styles.modalHeader}>
                 <h2>{editingExpense ? "Edit Expense" : "Add Expense"}</h2>
