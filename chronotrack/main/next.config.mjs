@@ -2,8 +2,30 @@
 const nextConfig = {
   // Enable static optimization where possible
   output: 'standalone',
+
+  // Optimize production builds
+  swcMinify: true,
   
-  // Optimize production builds with webpack
+  // Improve production performance
+  reactStrictMode: true,
+  
+  // Optimize images
+  images: {
+    unoptimized: true,
+  },
+  
+  // Improve build performance
+  typescript: {
+    // Only do type checking in CI/CD, not during local builds
+    ignoreBuildErrors: process.env.CI ? false : true
+  },
+  
+  eslint: {
+    // Only do linting in CI/CD, not during local builds
+    ignoreDuringBuilds: process.env.CI ? false : true,
+  },
+  
+  // Webpack optimization
   webpack: (config, { dev, isServer }) => {
     // Only apply optimizations in production
     if (!dev) {
@@ -15,30 +37,21 @@ const nextConfig = {
       };
     }
     
+    // Reduce the impact of unused dependencies
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // Add any specific aliases here if needed
+    };
+    
     return config;
   },
   
-  // Enable React strict mode for better development experience
-  reactStrictMode: true,
-  
-  // Optimize images
-  images: {
-    unoptimized: true,
-  },
-  
-  // Improve build performance
-  typescript: {
-    ignoreBuildErrors: true
-  },
-  
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  
-  // Enable static page generation where possible
+  // Enable experimental features for better performance
   experimental: {
-    // This helps with precompilation
-    optimizeCss: true
+    // Modern JS features
+    serverActions: true,
+    // Optimize CSS
+    optimizeCss: true,
   }
 };
 
