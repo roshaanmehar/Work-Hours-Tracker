@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Play, Square, Coffee, RotateCcw, Clock } from "lucide-react"
 import Navbar from "@/components/navbar"
 import PinLogin from "@/components/pin-login"
+import { useAuth } from "@/context/auth-context"
 import { useSound } from "use-sound"
 import styles from "./page.module.css"
 
 type TrackingState = "idle" | "tracking" | "break"
 
 export default function Home() {
-  const [authenticated, setAuthenticated] = useState(false)
+  const { authenticated } = useAuth()
   const [state, setState] = useState<TrackingState>("idle")
   const [currentSession, setCurrentSession] = useState<{
     startTime: Date | null
@@ -26,7 +27,6 @@ export default function Home() {
   })
   const [elapsedTime, setElapsedTime] = useState("00:00:00")
   const [todayTotal, setTodayTotal] = useState("03:45:12")
-  const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null)
   const [availableJobs, setAvailableJobs] = useState([
     { id: 1, name: "Web Development", rate: 50 },
     { id: 2, name: "Design Work", rate: 45 },
@@ -38,27 +38,6 @@ export default function Home() {
   const [playClockOut] = useSound("/sounds/clock-out.mp3", { volume: 0.5 })
   const [playBreak] = useSound("/sounds/break.mp3", { volume: 0.5 })
   const [playResume] = useSound("/sounds/resume.mp3", { volume: 0.5 })
-
-  // Session timeout handler - reset after 90 seconds of inactivity
-  useEffect(() => {
-    if (!authenticated) return
-
-    const timeout = setTimeout(() => {
-      setAuthenticated(false)
-    }, 90 * 1000)
-
-    // Cleanup on unmount
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [authenticated])
-
-  // Replace the resetSessionTimeout function with this:
-  const resetSessionTimeout = () => {
-    // This function just triggers a re-render which will reset the timeout
-    // through the useEffect above
-    setAuthenticated(true)
-  }
 
   // Format time as HH:MM:SS
   const formatTime = (milliseconds: number) => {
@@ -113,8 +92,6 @@ export default function Home() {
   }
 
   const handleClockIn = () => {
-    resetSessionTimeout()
-
     // Get suggested job
     const suggestedJob = getSuggestedJob()
 
@@ -129,7 +106,6 @@ export default function Home() {
   }
 
   const handleClockOut = () => {
-    resetSessionTimeout()
     setState("idle")
     setCurrentSession({
       startTime: null,
@@ -142,7 +118,6 @@ export default function Home() {
   }
 
   const handleBreak = () => {
-    resetSessionTimeout()
     setState("break")
     setCurrentSession({
       ...currentSession,
@@ -152,7 +127,6 @@ export default function Home() {
   }
 
   const handleResumeWork = () => {
-    resetSessionTimeout()
     if (!currentSession.breakStartTime) return
 
     const now = new Date()
@@ -167,19 +141,15 @@ export default function Home() {
     playResume()
   }
 
-  const handlePinSuccess = () => {
-    setAuthenticated(true)
-  }
-
   // Split time into digits for animation
   const [hours, minutes, seconds] = elapsedTime.split(":")
 
   if (!authenticated) {
-    return <PinLogin onSuccess={handlePinSuccess} />
+    return <PinLogin />
   }
 
   return (
-    <div className={styles.container} onClick={resetSessionTimeout}>
+    <div className={styles.container}>
       <div className={styles.mainContent}>
         <div className={styles.timeDisplayContainer}>
           <div
