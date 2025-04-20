@@ -10,22 +10,12 @@ export default function Preload() {
     // Preload critical pages
     const pagesToPreload = ["/history", "/analytics", "/reports", "/expenses", "/admin"]
 
-    // Use requestIdleCallback to preload during browser idle time
-    if ("requestIdleCallback" in window) {
+    // Use setTimeout to delay preloading until after initial page load
+    setTimeout(() => {
       pagesToPreload.forEach((page) => {
-        // @ts-ignore - TypeScript doesn't recognize requestIdleCallback
-        window.requestIdleCallback(() => {
-          router.prefetch(page)
-        })
+        router.prefetch(page)
       })
-    } else {
-      // Fallback for browsers that don't support requestIdleCallback
-      setTimeout(() => {
-        pagesToPreload.forEach((page) => {
-          router.prefetch(page)
-        })
-      }, 2000)
-    }
+    }, 2000)
   }, [router])
 
   return null
