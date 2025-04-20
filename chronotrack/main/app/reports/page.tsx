@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+// Import only the specific icons you need
 import {
   Calendar,
   Clock,
@@ -17,6 +18,7 @@ import {
 import Navbar from "@/components/navbar"
 import { useAuth } from "@/context/auth-context"
 import styles from "./page.module.css"
+// Import only the specific function you need
 import { prepareForGoogleSheets } from "@/utils/export-utils"
 
 // Mock data for time entries
