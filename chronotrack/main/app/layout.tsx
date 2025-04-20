@@ -23,7 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={pixelFont.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <div className="scanlines"></div>
+      </body>
     </html>
   )
 }
