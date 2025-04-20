@@ -386,7 +386,9 @@ export default function AdminPage() {
           </motion.button>
         </div>
 
-        {showAdminLogin && <AdminLogin onSuccess={handleAdminLogin} onCancel={() => setShowAdminLogin(false)} />}
+        <AnimatePresence>
+          {showAdminLogin && <AdminLogin onSuccess={handleAdminLogin} onCancel={() => setShowAdminLogin(false)} />}
+        </AnimatePresence>
 
         <Navbar activePage="admin" />
       </div>
