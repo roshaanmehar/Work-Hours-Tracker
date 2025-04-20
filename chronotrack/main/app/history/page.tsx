@@ -4,82 +4,96 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Clock, Calendar } from "lucide-react"
 import Navbar from "@/components/navbar"
-import styles from "./page.module.css"
 import { useAuth } from "@/context/auth-context"
-
-// Mock data - would be fetched from backend in real implementation
-// Modified to show only final records without modification indicators
-const mockEntries = [
-  {
-    id: 1,
-    date: "2025-04-19",
-    clockIn: "09:15:00",
-    clockOut: "12:30:00",
-    duration: "03:15:00",
-    breaks: [{ start: "10:30:00", end: "10:45:00", duration: "00:15:00" }],
-  },
-  {
-    id: 2,
-    date: "2025-04-19",
-    clockIn: "13:30:00",
-    clockOut: "17:45:00",
-    duration: "04:15:00",
-    breaks: [{ start: "15:00:00", end: "15:20:00", duration: "00:20:00" }],
-  },
-  {
-    id: 3,
-    date: "2025-04-18",
-    clockIn: "08:45:00", // This is the modified time (was 09:00:00)
-    clockOut: "16:30:00", // This is the modified time (was 16:00:00)
-    duration: "07:45:00", // This is the modified duration (was 07:00:00)
-    breaks: [
-      { start: "12:00:00", end: "12:45:00", duration: "00:45:00" },
-      { start: "14:30:00", end: "14:45:00", duration: "00:15:00" },
-    ],
-  },
-  // Removed deleted entry
-  {
-    id: 5,
-    date: "2025-04-16",
-    clockIn: "08:30:00",
-    clockOut: "16:45:00",
-    duration: "08:15:00",
-    breaks: [{ start: "12:15:00", end: "13:00:00", duration: "00:45:00" }],
-  },
-]
+import { useTimeEntries } from "@/hooks/use-data"
+import type { TimeEntry, Break } from "@/types/supabase"
+import styles from "./page.module.css"
 
 export default function HistoryPage() {
+  const { authenticated, resetSessionTimeout } = useAuth()
+  const { data: timeEntries, isLoading, error, refresh } = useTimeEntries()
   const [expandedEntry, setExpandedEntry] = useState<number | null>(null)
   const [filter, setFilter] = useState("all")
-  const [showFilterMenu, setShowFilterMenu] = useState(false)
   const [dateRange, setDateRange] = useState("week")
-
-  const { resetSessionTimeout } = useAuth()
 
   // Call resetSessionTimeout only once when the component mounts
   useEffect(() => {
-    resetSessionTimeout()
-  }, [resetSessionTimeout]) // resetSessionTimeout is now memoized, so this is safe
+    if (authenticated) {
+      resetSessionTimeout()
+    }
+  }, [authenticated, resetSessionTimeout])
 
   const toggleExpand = (id: number) => {
     setExpandedEntry(expandedEntry === id ? null : id)
   }
 
+  // Filter entries based on date range
+  const filteredEntries = timeEntries?.filter((entry) => {
+    const entryDate = new Date(entry.date)
+
+    if (dateRange === "week") {
+      // Current week (last 7 days)
+      const weekAgo = new Date()
+      weekAgo.setDate(weekAgo.getDate() - 7)
+      return entryDate >= weekAgo
+    } else if (dateRange === "month") {
+      // Current month (last 30 days)
+      const monthAgo = new Date()
+      monthAgo.setDate(monthAgo.getDate() - 30)
+      return entryDate >= monthAgo
+    }
+
+    return true // "all" filter
+  })
+
   // Group entries by date
-  const entriesByDate = mockEntries.reduce(
-    (acc, entry) => {
-      const date = entry.date
-      if (!acc[date]) {
-        acc[date] = []
-      }
-      acc[date].push(entry)
-      return acc
-    },
-    {} as Record<string, typeof mockEntries>,
-  )
+  const entriesByDate =
+    filteredEntries?.reduce(
+      (acc, entry) => {
+        const date = entry.date
+        if (!acc[date]) {
+          acc[date] = []
+        }
+        acc[date].push(entry)
+        return acc
+      },
+      {} as Record<string, TimeEntry[]>,
+    ) || {}
 
   // Sort dates in descending order
   const sortedDates = Object.keys(entriesByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <h1>Time History</h1>
+        </header>
+        <div className={styles.loadingState}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Loading time entries...</p>
+        </div>
+        <Navbar activePage="history" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <h1>Time History</h1>
+        </header>
+        <div className={styles.errorState}>
+          <p>Error loading time entries: {error}</p>
+          <button onClick={refresh} className={styles.retryButton}>
+            Retry
+          </button>
+        </div>
+        <Navbar activePage="history" />
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -140,9 +154,9 @@ export default function HistoryPage() {
                   <div className={styles.entryHeader} onClick={() => toggleExpand(entry.id)}>
                     <div className={styles.entryTime}>
                       <span className={styles.timeRange}>
-                        {entry.clockIn} - {entry.clockOut}
+                        {entry.clock_in} - {entry.clock_out || "In Progress"}
                       </span>
-                      <span className={styles.duration}>{entry.duration}</span>
+                      <span className={styles.duration}>{entry.duration || "Calculating..."}</span>
                     </div>
                     <motion.div
                       animate={{ rotate: expandedEntry === entry.id ? 180 : 0 }}
@@ -162,15 +176,15 @@ export default function HistoryPage() {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        {entry.breaks.length > 0 && (
+                        {entry.breaks && Array.isArray(entry.breaks) && entry.breaks.length > 0 && (
                           <div className={styles.breaksList}>
                             <h4>Breaks ({entry.breaks.length})</h4>
-                            {entry.breaks.map((breakItem, index) => (
+                            {(entry.breaks as Break[]).map((breakItem, index) => (
                               <div key={index} className={styles.breakItem}>
                                 <span>
-                                  {breakItem.start} - {breakItem.end}
+                                  {breakItem.start} - {breakItem.end || "In Progress"}
                                 </span>
-                                <span>{breakItem.duration}</span>
+                                <span>{breakItem.duration || "Calculating..."}</span>
                               </div>
                             ))}
                           </div>
