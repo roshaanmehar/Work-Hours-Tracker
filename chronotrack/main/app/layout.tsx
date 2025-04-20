@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Press_Start_2P } from "next/font/google"
 import { AuthProvider } from "@/context/auth-context"
+import AuthCheck from "@/components/auth-check"
 import "./globals.css"
 
 // Initialize the Press Start 2P font
@@ -26,7 +27,7 @@ export default function RootLayout({
     <html lang="en" className={pixelFont.variable}>
       <body>
         <AuthProvider>
-          {children}
+          <AuthCheck>{children}</AuthCheck>
           <div className="scanlines"></div>
         </AuthProvider>
       </body>
