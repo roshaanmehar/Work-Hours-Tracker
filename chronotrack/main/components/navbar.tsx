@@ -2,7 +2,6 @@
 
 import { Clock, Calendar, BarChart2, Settings, Shield, DollarSign } from "lucide-react"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
 import styles from "./navbar.module.css"
 
@@ -32,39 +31,54 @@ export default function Navbar({
                 : "track")
 
   return (
-    <motion.nav
-      className={styles.navbar}
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.3, delay: 0.2 }}
-    >
-      <Link href="/" className={`${styles.navItem} ${currentPage === "track" ? styles.active : ""}`}>
+    <nav className={styles.navbar}>
+      <Link href="/" className={`${styles.navItem} ${currentPage === "track" ? styles.active : ""}`} prefetch={true}>
         <Clock size={22} />
         <span>Track</span>
       </Link>
-      <Link href="/history" className={`${styles.navItem} ${currentPage === "history" ? styles.active : ""}`}>
+      <Link
+        href="/history"
+        className={`${styles.navItem} ${currentPage === "history" ? styles.active : ""}`}
+        prefetch={true}
+      >
         <Calendar size={22} />
         <span>History</span>
       </Link>
-      <Link href="/expenses" className={`${styles.navItem} ${currentPage === "expenses" ? styles.active : ""}`}>
+      <Link
+        href="/expenses"
+        className={`${styles.navItem} ${currentPage === "expenses" ? styles.active : ""}`}
+        prefetch={true}
+      >
         <DollarSign size={22} />
         <span>Expenses</span>
       </Link>
-      <Link href="/analytics" className={`${styles.navItem} ${currentPage === "analytics" ? styles.active : ""}`}>
+      <Link
+        href="/analytics"
+        className={`${styles.navItem} ${currentPage === "analytics" ? styles.active : ""}`}
+        prefetch={true}
+      >
         <BarChart2 size={22} />
         <span>Stats</span>
       </Link>
-      <Link href="/settings" className={`${styles.navItem} ${currentPage === "settings" ? styles.active : ""}`}>
+      <Link
+        href="/settings"
+        className={`${styles.navItem} ${currentPage === "settings" ? styles.active : ""}`}
+        prefetch={true}
+      >
         <Settings size={22} />
         <span>Settings</span>
       </Link>
 
       {isAdmin && (
-        <Link href="/admin" className={`${styles.navItem} ${currentPage === "admin" ? styles.active : ""}`}>
+        <Link
+          href="/admin"
+          className={`${styles.navItem} ${currentPage === "admin" ? styles.active : ""}`}
+          prefetch={true}
+        >
           <Shield size={22} />
           <span>Admin</span>
         </Link>
       )}
-    </motion.nav>
+    </nav>
   )
 }
