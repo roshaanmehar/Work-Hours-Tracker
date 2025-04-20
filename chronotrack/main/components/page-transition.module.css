@@ -1,48 +1,47 @@
 .loadingOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Less opaque for faster visual transition */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    pointer-events: none; /* Allow clicks to pass through */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+.pixelLoader {
+  width: 48px;
+  height: 48px;
+  background-color: #000;
+  border: 3px solid #e5b80b;
+  padding: 3px;
+  position: relative;
+}
+
+.pixelLoaderInner {
+  width: 100%;
+  height: 100%;
+  background-color: #e5b80b;
+  animation: pixelLoading 0.5s infinite;
+}
+
+@keyframes pixelLoading {
+  0% {
+    clip-path: polygon(0 0, 0% 0, 0% 100%, 0% 100%);
   }
-  
-  .pixelLoader {
-    width: 48px; /* Smaller loader */
-    height: 48px;
-    background-color: #000;
-    border: 3px solid #e5b80b;
-    padding: 3px;
-    position: relative;
+  25% {
+    clip-path: polygon(0 0, 100% 0, 100% 0%, 0% 0%);
   }
-  
-  .pixelLoaderInner {
-    width: 100%;
-    height: 100%;
-    background-color: #e5b80b;
-    animation: pixelLoading 0.5s infinite; /* Faster animation */
+  50% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
   }
-  
-  @keyframes pixelLoading {
-    0% {
-      clip-path: polygon(0 0, 0% 0, 0% 100%, 0% 100%);
-    }
-    25% {
-      clip-path: polygon(0 0, 100% 0, 100% 0%, 0% 0%);
-    }
-    50% {
-      clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
-    }
-    75% {
-      clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
-    }
-    100% {
-      clip-path: polygon(0 0, 0% 0, 0% 100%, 0% 100%);
-    }
+  75% {
+    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
   }
-  
+  100% {
+    clip-path: polygon(0 0, 0% 0, 0% 100%, 0% 100%);
+  }
+}
