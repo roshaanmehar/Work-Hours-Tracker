@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -9,7 +11,7 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   height: 100%;
-  font-family: var(--font-pixel), monospace;
+  font-family: "Press Start 2P", monospace;
 }
 
 body {
