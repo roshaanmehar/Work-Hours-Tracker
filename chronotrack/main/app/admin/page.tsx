@@ -149,7 +149,7 @@ const auditLogEntries = [
 ]
 
 export default function AdminPage() {
-  const { authenticated } = useAuth()
+  const { authenticated, resetSessionTimeout } = useAuth()
   const [expandedEntry, setExpandedEntry] = useState<number | null>(null)
   const [filter, setFilter] = useState("all")
   const [showFilterMenu, setShowFilterMenu] = useState(false)
@@ -179,12 +179,20 @@ export default function AdminPage() {
   const [newRule, setNewRule] = useState({ days: "Monday-Friday", timeRange: "9:00-17:00", job: "Web Development" })
   const [showAddRule, setShowAddRule] = useState(false)
 
+  // Initialize admin authentication state
   useEffect(() => {
     // Check if user is already authenticated as admin
     // This would typically check a token or session
     // For demo purposes, we'll just set it to false initially
     setAdminAuthenticated(false)
   }, [])
+
+  // Call resetSessionTimeout only once when the component mounts
+  useEffect(() => {
+    if (authenticated) {
+      resetSessionTimeout()
+    }
+  }, [authenticated, resetSessionTimeout])
 
   const toggleExpand = (id: number) => {
     setExpandedEntry(expandedEntry === id ? null : id)
