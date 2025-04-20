@@ -19,7 +19,6 @@ export default function PinLogin() {
 
   // Mock PIN for demo purposes - in real app, this would be verified against a hashed value in the database
   const CORRECT_PIN = ["2", "2", "1", "6"]
-  const ADMIN_PIN = ["1", "2", "3", "4"] // Admin PIN is now just for verification, not direct admin access
   const MAX_ATTEMPTS = 3
   const LOCK_DURATION = 30 // seconds
 
@@ -86,9 +85,9 @@ export default function PinLogin() {
 
   const verifyPin = (pinArray: string[]) => {
     // In a real app, this would make an API call to verify the PIN
-    const pinString = pinArray.join("")
+    const isCorrect = pinArray.join("") === CORRECT_PIN.join("")
 
-    if (pinString === CORRECT_PIN.join("") || pinString === ADMIN_PIN.join("")) {
+    if (isCorrect) {
       setError("")
       setAuthenticated(true)
     } else {
