@@ -1,9 +1,9 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { motion } from "framer-motion"
-import { X, Key } from 'lucide-react'
-import { useAuth } from "@/context/auth-context"
+import { Shield } from "lucide-react"
 import styles from "./admin-login.module.css"
 
 interface AdminLoginProps {
@@ -12,82 +12,106 @@ interface AdminLoginProps {
 }
 
 export default function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
-  const { adminLogin } = useAuth()
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [locked, setLocked] = useState(false)
+  const [lockTimer, setLockTimer] = useState(0)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Mock credentials for demo purposes
+  const CORRECT_USERNAME = "admin"
+  const CORRECT_PASSWORD = "admin123"
+  const MAX_ATTEMPTS = 3
+  const LOCK_DURATION = 60 // seconds
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!password) {
-      setError("Please enter your password")
-      return
-    }
-    
-    setIsLoading(true)
-    setError("")
-    
-    try {
-      const success = await adminLogin(password)
-      
-      if (success) {
-        onSuccess()
-      } else {
-        setError("Invalid password")
+
+    if (locked) return
+
+    // In a real app, this would make an API call to verify the credentials
+    if (username === CORRECT_USERNAME && password === CORRECT_PASSWORD) {
+      setError("")
+      onSuccess()
+    } else {
+      const newAttempts = attempts + 1
+      setAttempts(newAttempts)
+      setError("Invalid username or password")
+
+      // Lock after max attempts
+      if (newAttempts >= MAX_ATTEMPTS) {
+        setLocked(true)
+        setLockTimer(LOCK_DURATION)
+        setError(`Too many attempts. Locked for ${LOCK_DURATION} seconds.`)
+
+        // Start countdown
+        const interval = setInterval(() => {
+          setLockTimer((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval)
+              setLocked(false)
+              setAttempts(0)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
       }
-    } catch (err) {
-      setError("An error occurred. Please try again.")
-      console.error(err)
-    } finally {
-      setIsLoading(false)
     }
   }
 
   return (
-    <div className={styles.overlay}>
-      <motion.div
-        className={styles.modal}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-      >
-        <button className={styles.closeButton} onClick={onCancel}>
-          <X size={20} />
-        </button>
+    <div className={styles.form}>
+      <div className={styles.formHeader}>
+        <Shield size={18} />
+        <h2>Admin Authentication</h2>
+      </div>
 
-        <div className={styles.iconContainer}>
-          <Key size={32} />
+      <form onSubmit={handleSubmit}>
+        <div className={styles.formGroup}>
+          <label htmlFor="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={locked}
+            className={styles.input}
+          />
         </div>
 
-        <h2 className={styles.title}>Admin Authentication</h2>
+        <div className={styles.formGroup}>
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={locked}
+            className={styles.input}
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
-              placeholder="Enter admin password"
-              autoFocus
-            />
+        {error && <div className={styles.error}>{error}</div>}
+
+        {locked && (
+          <div className={styles.lockedMessage}>
+            Locked for <span className={styles.timer}>{lockTimer}</span> seconds
           </div>
+        )}
 
-          {error && <div className={styles.error}>{error}</div>}
+        <div className={styles.formActions}>
+          <button type="button" className={styles.cancelButton} onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="submit" className={styles.loginButton} disabled={locked || !username || !password}>
+            Login
+          </button>
+        </div>
 
-          <div className={styles.buttonGroup}>
-            <button type="button" className={styles.cancelButton} onClick={onCancel} disabled={isLoading}>
-              Cancel
-            </button>
-            <button type="submit" className={styles.submitButton} disabled={isLoading}>
-              {isLoading ? "Authenticating..." : "Login"}
-            </button>
-          </div>
-        </form>
-      </motion.div>
+        <div className={styles.hint}>Demo credentials: admin / admin123</div>
+      </form>
     </div>
   )
 }
