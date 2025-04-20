@@ -2,9 +2,6 @@
 const nextConfig = {
   // Enable static optimization where possible
   output: 'standalone',
-
-  // Optimize production builds
-  swcMinify: true,
   
   // Improve production performance
   reactStrictMode: true,
@@ -37,30 +34,14 @@ const nextConfig = {
       };
     }
     
-    // Reduce the impact of unused dependencies
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      // Add any specific aliases here if needed
-    };
-    
     return config;
   },
   
   // Enable experimental features for better performance
   experimental: {
-    // Modern JS features
-    serverActions: true,
     // Optimize CSS
     optimizeCss: true,
   }
 };
 
 export default nextConfig;
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
-
-// Wrap your existing config with withBundleAnalyzer
-module.exports = withBundleAnalyzer({
-  // Your existing config here
-});

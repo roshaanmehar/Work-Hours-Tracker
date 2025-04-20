@@ -79,17 +79,77 @@ export default function Home() {
 
   // Get suggested job based on day and time
   const getSuggestedJob = () => {
-    // This would be based on rules from the database
-    // For now, just return a default job based on current hour
-    const hour = new Date().getHours()
+    const now = new Date()
+    const currentHour = now.getHours()
+    const currentMinutes = now.getMinutes()
+    const currentTime = currentHour + currentMinutes / 60 // Convert to decimal time (e.g., 9:30 = 9.5)
 
-    if (hour >= 9 && hour < 12) {
-      return availableJobs[0] // Web Development in the morning
-    } else if (hour >= 12 && hour < 14) {
-      return availableJobs[2] // Client Meeting around lunch
-    } else {
-      return availableJobs[1] // Design Work in the afternoon
+    // Get day of week as string (0 = Sunday, 1 = Monday, etc.)
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    const currentDay = daysOfWeek[now.getDay()]
+
+    // This would come from the database in a real implementation
+    // For now, we'll use the mock rules from the admin page
+    const jobRules = [
+      { id: 1, days: "Monday-Friday", timeRange: "9:00-12:00", job: "Web Development" },
+      { id: 2, days: "Monday-Friday", timeRange: "12:00-14:00", job: "Client Meeting" },
+      { id: 3, days: "Monday-Friday", timeRange: "14:00-17:00", job: "Design Work" },
+      { id: 4, days: "Saturday", timeRange: "10:00-16:00", job: "Web Development" },
+      { id: 5, days: "Sunday", timeRange: "12:00-18:00", job: "Design Work" },
+    ]
+
+    // Find the first matching rule
+    for (const rule of jobRules) {
+      // Check if current day matches the rule
+      const matchesDay = checkDayMatch(currentDay, rule.days)
+
+      // If day matches, check if current time is within the time range
+      if (matchesDay) {
+        const [startTime, endTime] = parseTimeRange(rule.timeRange)
+        if (currentTime >= startTime && currentTime < endTime) {
+          // Find the job object that matches the rule
+          const matchingJob = availableJobs.find((job) => job.name === rule.job)
+          if (matchingJob) {
+            return matchingJob
+          }
+        }
+      }
     }
+
+    // Default to first job if no rules match
+    return availableJobs[0]
+  }
+
+  // Helper function to check if the current day matches the rule's day specification
+  const checkDayMatch = (currentDay, ruleDays) => {
+    if (ruleDays === "Weekends") {
+      return currentDay === "Saturday" || currentDay === "Sunday"
+    }
+
+    if (ruleDays === "Monday-Friday") {
+      return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(currentDay)
+    }
+
+    // Handle multiple days separated by commas
+    if (ruleDays.includes(",")) {
+      const days = ruleDays.split(",").map((d) => d.trim())
+      return days.includes(currentDay)
+    }
+
+    // Single day match
+    return ruleDays === currentDay
+  }
+
+  // Helper function to parse time range string (e.g., "9:00-17:00") into decimal hours
+  const parseTimeRange = (timeRange) => {
+    const [start, end] = timeRange.split("-")
+
+    const parseTime = (timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number)
+      return hours + minutes / 60
+    }
+
+    return [parseTime(start), parseTime(end)]
   }
 
   const handleClockIn = () => {
